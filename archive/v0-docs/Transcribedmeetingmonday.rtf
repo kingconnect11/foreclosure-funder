@@ -1,0 +1,798 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2867
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 .SFNS-Regular;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs26 \cf0 You know, when it puts that case number in there, right? And I'll show you, you can go to Sedgwick. Uh, I have to say, uh, The court, you can, throughout the state of Kansas, is the public website, and you can type in the person's name or the case number, right? And it'll show everything. So what you have to make sure of is it will it will show you all the docs in that. So it will tell you what they're asking for, you know, what they follow the suit for, how much? I don't think I don't know if there's a way to extract that other than, you know, if a human doing it. But where is it? Where is the data? I'll show you. And then also, if there's other liens, because maybe there's a tax lien, because they didn't pay their taxes. And usually there's not a tax lien because taxes are paid out of your escrow account, but maybe there's a mechanic lien that's, you know, been followed because they had the, they had the roof replaced and, and the insurance didn't make the checkout to the lender and the homeowner, just made it to the homeowner and the homeowner. to screw it, pocket the money. So each investor has to kind of go to this public website to research the property a little bit, you know, so if I really said, here's value, and they didn't have to do, it would be, you know, being able to tell them, you know, we did the research. This is approximately what they want, even if it's not the exact number. You said, you know, plus or minus within $5,000. An offer range. An offer range of what the bank's probably going to be looking for. And there's no other liens attached to it or it looks like there's a mechanical lien for a roof. So this is for the data scraper module increasing the data points that it's gathering. So if, if, on the day of the property being listed for, what is it, listed for? Foreclosure. Foreclosure. For... Pre foreclosure. The only info that we'll have is an address. We need to scrape... ...and a case number. We'll need to scrape any active lawsuits, liens, et cetera. We need to scrape as much visual data. So from, uh, open maps, Google Maps, Google Earth, if there's, you know, photos nearby, um, relevant nearby properties, what they sold for, what they rent for their condition. Um, And then have an algorithm, which gives a recommendation score for each of these, um, properties based on the investors' interest. How do we get what the investor is interested in? We can, um, either interview them, either with an AI agent, or we can simply onboard them on an onboarding call, and the transcript of that call will be used to, uh, tell the recommendation engine, what, um, kind of deals and properties and what kind of an investor this person is. Um, and then each property in the dashboard that's recommended will have a recommendation score and a reason for why it's why or why not. It's recommended for that investor.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 \
+You\
+Go ahead. \
+\
+Mike King\
+Okay, as we're building it out, if there's, maybe a way to, like the MLS, I can go and run a report, like, every Monday and say, hey, show me, all the expired, withdrawn listings in the last week, and it will spit it out, and then I think I can take that report, and put it like in a CBO file or something. That maybe to upload and populate. That might be another, you know, thing that, you know, we'd want investors to, uh, potentially look at, \
+\
+You\
+Sure. \
+\
+Mike King\
+because some investors, because the sales of the foreclosure, they have to pay cash, right then, they, you know, uh. And so as as we, grow this, maybe that's another avenue that we should think about, because that would give them real time of properties that, have expired, and then. But I, I can, I can monitor them and pull them \
+\
+You\
+Well, \
+\
+Mike King\
+off. \
+\
+You\
+Mike, \
+\
+Mike King\
+You \
+\
+You\
+that \
+\
+Mike King\
+know, \
+\
+You\
+can \
+\
+Mike King\
+if they've \
+\
+You\
+be \
+\
+Mike King\
+been \
+\
+You\
+automated as well. \
+\
+Mike King\
+listening. \
+\
+You\
+So, um, even if there's no way for us to connect to the back end, I can set up, and I realize my dad has a spare computer here, a spare Mac. So what I can do is I can set up, um, What's called open claw on, This, uh, Mac that my dad has downstairs and I'm going to try and do it tonight. And then what \
+\
+Mike King\
+Oh. \
+\
+You\
+we can do is we can have you log into all your real estate websites, not the ones that communicate with people, but the, you know, MLS, anything that it needs to get, grab information from. And I \
+\
+Mike King\
+Okay. \
+\
+You\
+can ask. I can ask it to every day or every week. update a sheet with expired MLS listings, um, record their last known price, uh, record any data available from that MLS listing, and, uh, or, \
+\
+Mike King\
+Yeah, uh, and I'll think about what data might be important to have, but, you know, that might be. I want to focus on the foreclosures 1st, but eventually, you know, that might be a good thing to add, but I want to, you know, I want to, you know, focus on what we're starting. And, you know, build on that, but that's, to me, that's like a 3 month maybe on the line project. \
+\
+You\
+Well, if we move, \
+\
+Mike King\
+That makes sense. \
+\
+You\
+if we move at the speed that we can move, it could be a 3 week down the line progress, but, um, That's a good idea. And I think another thing you should do is you should sit down with each of your, you should just take your real estate investors out to lunch and just say, hey, I'm building a piece of software to support someone in your position. If you could have a piece of software, do anything. What would you have it do? And just, you know, ask, what's the what's the most annoying thing about buying a property? What's the most annoying thing about researching these properties and just see if we're forgetting or missing anything? And, Who knows, that one of \
+\
+Mike King\
+. \
+\
+You\
+them might have a really great idea that we haven't thought of. \
+\
+Mike King\
+Well, and I've been, my, the most important one is Dan Drake, and I've been talking to him, and and I think we're hitting a lot of things, the nails on the head. So, you know, I think really, if I can, if I can get, you know, um, like going through the court cases, being able to, put that information, and I almost really think that that information is, something that, you have to be on the premiere plan to get that, right? Because uh, uh, you know, showing that Hey, there's, this, this uh, the lawsuits for 135 and it looks like there's a mechanical lane attached to it for another $10,000 or whatever. If I can get AI to, go through the, go through the court cases, to, to extract that information that's attached to the house. That would be, that would be huge, because, I know, they like Tantrak, that's where he spends most of his time if he finds a house, then he's got a research. You know how much stuff is clouded the title. How many, you know, things do we have to work through? \
+\
+You\
+Okay. Is that \
+\
+Mike King\
+And \
+\
+You\
+you? \
+\
+Mike King\
+so for him, no, no. Oh, one of those, not Roust trucks, but, \
+\
+You\
+Tennessee? \
+\
+Mike King\
+what, that Ford, \
+\
+You\
+Tennessee? Raptor. \
+\
+Mike King\
+uh, uh, the raptor. yeah. Yeah. Yeah, it was a raptor. So I think, I think that's where we need to focus on is make sure we get that if we can get that information and you'll see when you get a chance if you could type in that, you know, as uh, that website I sent you, then you can take any one of those words just filed. Um, and I would choose, um, uh, Denny, warn Denny, it's like 2100 Somerset, because they have a couple things going on with their, with their property. They've got, you know, um some other, uh, judgments and stuff. So if there's a way that, you know, Claude or whoever, you know, can kind of go through documents or open documents and research it and say, yep, it's just the house or it's blah, blah, blah. Then that's the information that is gonna be huge. \
+\
+You\
+That \
+\
+Mike King\
+That \
+\
+You\
+sounds \
+\
+Mike King\
+makes \
+\
+You\
+good. \
+\
+Mike King\
+sense. \
+\
+You\
+Yeah, for the most part it does. \
+\
+Mike King\
+Yeah, that's that's gonna be the big part. If we do that then I think we really have something. I think we have something that we can just jump out of the shoot, and maybe automatically start \
+\
+You\
+Yeah. I, \
+\
+Mike King\
+like a month from now, \
+\
+You\
+I, \
+\
+Mike King\
+start \
+\
+You\
+I, \
+\
+Mike King\
+charging \
+\
+You\
+And \
+\
+Mike King\
+membership, \
+\
+You\
+I, \
+\
+Mike King\
+and, \
+\
+You\
+I \
+\
+Mike King\
+and, \
+\
+You\
+think the best way \
+\
+Mike King\
+I'm \
+\
+You\
+to \
+\
+Mike King\
+sorry, \
+\
+You\
+do \
+\
+Mike King\
+go \
+\
+You\
+it is \
+\
+Mike King\
+ahead. \
+\
+You\
+we find, you know, I think we've split this up pretty well. I'm the developer and the guy who knows how to build it and explain it and you're the one who knows the market. and you can sell it. \
+\
+Mike King\
+Yeah, \
+\
+You\
+Yeah. \
+\
+Mike King\
+I'm the one that's going to be with the investors and there's a, there's an investment group, just different investors get together, and I've never really had a reason to go to that, but now I'm thinking, hey, I can go as a realtor, and I say, here's what, here's what I can offer you guys. You know once \
+\
+You\
+Yeah. \
+\
+Mike King\
+we kind of get this \
+\
+You\
+But, \
+\
+Mike King\
+running a little bit too. You know. \
+\
+You\
+but, \
+\
+Mike King\
+Uh \
+\
+You\
+but, \
+\
+Mike King\
+and then we can probably \
+\
+You\
+The \
+\
+Mike King\
+add more people. \
+\
+You\
+1st thing \
+\
+Mike King\
+Sorry \
+\
+You\
+we \
+\
+Mike King\
+go \
+\
+You\
+need to \
+\
+Mike King\
+ahead. \
+\
+You\
+do is keep asking questions. So like the more, \
+\
+Mike King\
+Yeah. \
+\
+You\
+the more conversations we have with any kind of person in the space, um, I don't know, are there other service providers who specifically service real estate investors in this area or like, Is there another? \
+\
+Mike King\
+I don't know. I don't think there's, I mean, there's, there's, there's companies like, uh, \
+\
+You\
+What \
+\
+Mike King\
+well, Red Finn \
+\
+You\
+about \
+\
+Mike King\
+is, \
+\
+You\
+like mortgage \
+\
+Mike King\
+is, \
+\
+You\
+brokers? Do you know mortgage brokers or like who does, \
+\
+Mike King\
+Mortgage \
+\
+You\
+or \
+\
+Mike King\
+brokers, \
+\
+You\
+like, who \
+\
+Mike King\
+but. \
+\
+You\
+does a, who does a real estate investor talk to other than you if they're about to purchase a house? \
+\
+Mike King\
+Well, I think, you know, if there, it depends. I mean, I think, you know, part of it is, uh, you know, some of them, there's, you know, there's, there's a handful of attorneys that, \
+\
+You\
+Okay. \
+\
+Mike King\
+that, uh, work with foreclosures, so, you know, it's maybe getting to know some of those \
+\
+You\
+Yeah. \
+\
+Mike King\
+attorneys. \
+\
+You\
+Well, \
+\
+Mike King\
+asking some of those attorneys some questions too. \
+\
+You\
+here's \
+\
+Mike King\
+I \
+\
+You\
+an \
+\
+Mike King\
+mean, \
+\
+You\
+opportunity. \
+\
+Mike King\
+it's a \
+\
+You\
+Here's \
+\
+Mike King\
+process. \
+\
+You\
+an opportunity. If we find, uh, if you find a good, um, real estate attorney, in your, in your area that services your investors, we could, \
+\
+Mike King\
+Right. \
+\
+You\
+we could create an automation fairly easily that would send a deal from our end, once it, once the, once the deal is made or once a certain point has been made, it can automatically go to one law firm, and we can get a preferential rate with them, where we say, all right, we'll pay you. 200 bucks for every document that is filed, and then we charge 500 for that. Do you understand that? \
+\
+Mike King\
+A little bit, yeah, a \
+\
+You\
+Maybe \
+\
+Mike King\
+little bit. \
+\
+You\
+it's \
+\
+Mike King\
+I, \
+\
+You\
+just, it's \
+\
+Mike King\
+I, \
+\
+You\
+just an idea. \
+\
+Mike King\
+I, No, I kind of see where you're going, but I think you're right. I think I'll focus on asking \
+\
+You\
+Yes. \
+\
+Mike King\
+questions, but uh, and, and really, dialing in on what people are, are wanting. But I know like for the 1st for the investors that we're trying to reach out this list initially. These are guys that. Have liquid \
+\
+You\
+Yeah. \
+\
+Mike King\
+cash. and can go pull cash and and within 4 hours bring $30, $100,000 in a cashier's check like that. those are great. But once we get it running, that's why I'm thinking about the expired, because there's other, there's other investors that, you know, maybe don't have that kind of cash laying \
+\
+You\
+That's \
+\
+Mike King\
+around, but \
+\
+You\
+true. \
+\
+Mike King\
+they have a line of credit and they could close on just any property they want. It just takes them about you know, 20 to 30 days to do it. \
+\
+You\
+Yeah. \
+\
+Mike King\
+So some of these foreclosures wouldn't be a good match for some of those investors. \
+\
+You\
+Right. Yes. \
+\
+Mike King\
+Does that make sense? \
+\
+You\
+Oh, there's a giant, \
+\
+Mike King\
+Oh. \
+\
+You\
+holy fuck, there's like a \'a330 possum in the yard. Oh \
+\
+Mike King\
+Oh, really? \
+\
+You\
+my \
+\
+Mike King\
+And \
+\
+You\
+god. \
+\
+Mike King\
+so, so that's why as we develop it, that's why, at some point, bringing expireds and withdrawn listings then will probably be \
+\
+You\
+Yeah. \
+\
+Mike King\
+good, because those are listings that, if it's the right property and an investor wants information on it, then maybe we can still service it. Uh, and give them the RPR value and stuff like that. It's just a property that he would close on in 30 \
+\
+You\
+Yeah. \
+\
+Mike King\
+days because he's going to use his line of credit at the bank. To to pay for \
+\
+You\
+Yeah. \
+\
+Mike King\
+it, which is kind of like a cash transaction. But it's different than the cash transactions from the foreclosure cell. \
+\
+You\
+So I think... \
+\
+Mike King\
+But I think if we do it, if we if we focus on the foreclosure first. \
+\
+You\
+Yeah. \
+\
+Mike King\
+and get the system set up right, then we can kind of add in this other part of \
+\
+You\
+Yeah, \
+\
+Mike King\
+it. \
+\
+You\
+exactly. So what I'm building 1st is just for your small group of investors, something that \
+\
+Mike King\
+Right. \
+\
+You\
+something that they would actually use, and I'm mostly building it for you. You know, what would you, if you were in their shoes, what would you want? But, \
+\
+Mike King\
+Right. \
+\
+You\
+Yeah, \
+\
+Mike King\
+No, I think it's because we've talked about it. \
+\
+You\
+so that's that's \
+\
+Mike King\
+Yeah, \
+\
+You\
+version one, \
+\
+Mike King\
+then. \
+\
+You\
+but what I'm saying is is \
+\
+Mike King\
+Yeah. \
+\
+You\
+exactly what you're saying, which is version 3, version 5, version 6. We need to think about what dream features we could add. And the \
+\
+Mike King\
+Yeah. \
+\
+You\
+reason why I'm asking about the lawyers and the mortgage brokers or whoever is, like you said, there's other people who aren't writing a $100,000 check, they're getting a loan or they need their 1st mortgage, they need their, they need an escrow agreement drawn up or whatever it is that happens. \
+\
+Mike King\
+Right. \
+\
+You\
+You can very easily set up a partnership with a law firm or a \
+\
+Mike King\
+Oh, yeah. \
+\
+You\
+partnership with a mortgage broker or whatever, \
+\
+Mike King\
+Right. \
+\
+You\
+where you say, look, we're not just going to give you one lead. We're gonna give you every lead that comes to us. And if they \
+\
+Mike King\
+Right. \
+\
+You\
+click this button, you're going to charge them, we're going to pay you 250 bucks to draw up the, it's going to, you know, take a little bit of a hit on your end, but we're going to send you 10 of these a week. And it's an, \
+\
+Mike King\
+Right, we have \
+\
+You\
+it's, \
+\
+Mike King\
+lenders. We have preferred lender for our real estate \
+\
+You\
+Yeah. \
+\
+Mike King\
+team. And and he co- he does co-marketing with us and stuff like that. \
+\
+You\
+So you already have \
+\
+Mike King\
+So I \
+\
+You\
+it. \
+\
+Mike King\
+absolutely, I, Right, we have that. I understand where you're going with that. \
+\
+You\
+But, \
+\
+Mike King\
+Yes. And \
+\
+You\
+but, \
+\
+Mike King\
+that's, yes, \
+\
+You\
+you \
+\
+Mike King\
+that's, that's. \
+\
+You\
+know, the goal is, I, if in my, in my mind, the goal of this would be, I want anyone who just, on a Friday night says, I'd like to be a real estate investor, or they've been doing it forever, they can come to our site, they can see, \
+\
+Mike King\
+Yeah. \
+\
+You\
+here's everything that's available. Here's where we think, you know, you land, here's a questionnaire that determines your preferences and your budget and everything and everything else. \
+\
+Mike King\
+Yeah. \
+\
+You\
+And then instead of them having to say, okay, so how do I do this or how do I do that? We have a button that says, are you ready to make an offer? Great. Here's a package that we sell where we'll connect you with a local lawyer or we will at least at the very least for, you know, 10 bucks. We can give them pre-filled documents that are just like standard offer documents or like, you know, uh, to \
+\
+Mike King\
+So, one \
+\
+You\
+check \
+\
+Mike King\
+thing we're \
+\
+You\
+rest or \
+\
+Mike King\
+getting. \
+\
+You\
+whatever. \
+\
+Mike King\
+One thing we're getting ready to do, and I may add, my preferred lender to the investor list, because he's he's wanting to, like once a month, uh, have like a little happy our social, geared more for investors. And so I may add him to the list just so you can see what I'm, see what I'm building. And uh, so I can start working on him as being that, that, uh, that sponsor. \
+\
+You\
+That's \
+\
+Mike King\
+I \
+\
+You\
+great. \
+\
+Mike King\
+probably will at him so he can see what we're, what kind of, what, what I'm doing, information I'm providing. \
+\
+You\
+That's \
+\
+Mike King\
+Yeah, I think \
+\
+You\
+fantastic. \
+\
+Mike King\
+I will do that. I'm gonna add him tomorrow. No, the, no, the other thing I was just going to ask you at some point. Um, will you be able, will we be able to put that uh, put it on uh, my website, or create something on my website \
+\
+You\
+Put \
+\
+Mike King\
+that, \
+\
+You\
+the put the app for what? Yeah. \
+\
+Mike King\
+Put the app or something to where, you know, hey, if you're looking for investment property, click here. \
+\
+You\
+Absolutely, yeah. \
+\
+Mike King\
+At \
+\
+You\
+Yeah, \
+\
+Mike King\
+some point. \
+\
+You\
+so we can, um, \
+\
+Mike King\
+I'm not worried about that today or tomorrow, but I know we can modify our our website, so just in the background, maybe you could think about that. \
+\
+You\
+So \
+\
+Mike King\
+Um. \
+\
+You\
+do you manage your website through Lofty? Okay. \
+\
+Mike King\
+Yeah. \
+\
+You\
+So, \
+\
+Mike King\
+Yeah, it's all. We can adjust it and do it, there's a lot of things we can do on that. \
+\
+You\
+Yeah, I think. If you're able to put \
+\
+Mike King\
+Not. \
+\
+You\
+your own links on there, then it shouldn't be a problem. I can just put like a banner that links to the website and you can put whatever text you want on there, like, you know, \
+\
+Mike King\
+Okay. \
+\
+You\
+learn more \
+\
+Mike King\
+All \
+\
+You\
+about this \
+\
+Mike King\
+right. \
+\
+You\
+or, you know, try your new app, but. Yeah. \
+\
+Mike King\
+Well, we got a lot of stuff going on. It's going \
+\
+You\
+Yeah, \
+\
+Mike King\
+to be a fun adventure. \
+\
+You\
+I'm \
+\
+Mike King\
+I'm excited. \
+\
+You\
+looking forward to it, Mike. All \
+\
+Mike King\
+All right, buddy. Love \
+\
+You\
+right, \
+\
+Mike King\
+you. \
+\
+You\
+have a \
+\
+Mike King\
+Talk \
+\
+You\
+good \
+\
+Mike King\
+to \
+\
+You\
+night. \
+\
+Mike King\
+you \
+\
+You\
+Bye \
+\
+Mike King\
+later. \
+\
+You\
+bye. \
+\
+Mike King\
+All right, bye.\
+\
+\
+}

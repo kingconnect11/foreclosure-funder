@@ -30,3 +30,4 @@ scraper/scraper_log.txt
 .vscode/
 .idea/
 .cursor/
+.vercel

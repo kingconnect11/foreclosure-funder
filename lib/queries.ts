@@ -264,6 +264,18 @@ export async function getUserPipeline(
   return (data ?? []) as PipelineEntryWithProperty[]
 }
 
+export async function getUserPipelinePropertyIds(userId: string): Promise<string[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('investor_pipeline')
+    .select('property_id')
+    .eq('investor_id', userId)
+
+  if (error) throw error
+  return (data ?? []).map((row) => row.property_id)
+}
+
 // ---------------------------------------------------------------------------
 // Admin Panel
 // ---------------------------------------------------------------------------

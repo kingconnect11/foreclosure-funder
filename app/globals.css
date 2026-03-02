@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --background: #0b1928;
+  --surface: #112240;
+  --surface-elevated: #1a3050;
+  --border: #243b56;
+  --text-primary: #e8edf3;
+  --text-secondary: #8899aa;
+  --text-muted: #556677;
+  --accent: #d4952a;
+  --accent-hover: #e8a83e;
+  --success: #2d8a5e;
+  --warning: #c47a20;
+  --danger: #b83a3a;
+  --info: #3a7bd5;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-bg text-text-primary antialiased;
+  }
+
+  a {
+    @apply text-text-primary;
+  }
+}

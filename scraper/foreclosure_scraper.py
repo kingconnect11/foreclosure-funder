@@ -23,9 +23,13 @@ SCHEDULE (Mac/Linux cron):
 FIRST-TIME SETUP:
   1. Install dependencies (in virtual env):
      pip install anthropic requests beautifulsoup4 gspread google-auth
+     pip install supabase
   2. Place google_credentials.json in the same folder as this script
   3. Share the Google Sheet with the service account email (Editor)
   4. Set environment variable: export ANTHROPIC_API_KEY=sk-ant-...
+  4b. Set Supabase env vars (optional - scraper works without them):
+      export SUPABASE_URL=https://fgcwbrolnxpfihqkvmcn.supabase.co
+      export SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
   5. Verify SPREADSHEET_ID below matches the ID in your Google Sheet URL
   6. Run once and verify output in scraper_log.txt
 """
@@ -46,6 +50,18 @@ import anthropic
 # Google Sheets
 import gspread
 from google.oauth2.service_account import Credentials
+
+# Supabase
+try:
+    from supabase import create_client
+    SUPABASE_ENABLED = True
+except ImportError:
+    SUPABASE_ENABLED = False
+
+# Supabase config (set env vars before running)
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '')
+SEDGWICK_MARKET_ID = "00000000-0000-0000-0000-000000000001"
 
 # -- LOGGING -------------------------------------------------------------------
 logging.basicConfig(
@@ -407,6 +423,91 @@ def connect_to_sheets():
     return client.open_by_key(SPREADSHEET_ID)
 
 
+def connect_to_supabase():
+    """Connect to Supabase using service role key (bypasses RLS)."""
+    if not SUPABASE_ENABLED:
+        log.warning("supabase-py not installed. Run: pip install supabase")
+        return None
+    if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+        log.warning("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set - skipping Supabase")
+        return None
+    try:
+        client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+        log.info("Connected to Supabase")
+        return client
+    except Exception as e:
+        log.error(f"Failed to connect to Supabase: {e}")
+        return None
+
+
+def get_existing_supabase_cases(supabase_client) -> set:
+    """Get all case numbers already in Supabase for Sedgwick County."""
+    if not supabase_client:
+        return set()
+    try:
+        result = supabase_client.table('properties') \
+            .select('case_number') \
+            .eq('market_id', SEDGWICK_MARKET_ID) \
+            .execute()
+        cases = {row['case_number'].upper() for row in result.data} if result.data else set()
+        log.info(f"Found {len(cases)} existing case numbers in Supabase")
+        return cases
+    except Exception as e:
+        log.error(f"Failed to read existing cases from Supabase: {e}")
+        return set()
+
+
+def write_to_supabase(supabase_client, properties: list):
+    """Write properties to Supabase. Returns count of successfully inserted rows."""
+    if not supabase_client or not properties:
+        return 0
+
+    inserted = 0
+    for p in properties:
+        notice_raw = p.get('notice_type', '')
+        if notice_raw == 'Sale' or p.get('sale_date'):
+            notice_type_val = 'scheduled_sale'
+            stage_val = 'upcoming'
+        else:
+            notice_type_val = 'new_filing'
+            stage_val = 'new_filing'
+
+        row = {
+            'market_id': SEDGWICK_MARKET_ID,
+            'case_number': (p.get('case_number') or '').upper(),
+            'address': p.get('address'),
+            'city': p.get('city'),
+            'zip_code': p.get('zip_code'),
+            'state': 'KS',
+            'defendant_name': p.get('defendant'),
+            'plaintiff_name': p.get('plaintiff'),
+            'property_type': p.get('property_type'),
+            'bedrooms': p.get('bedrooms'),
+            'bathrooms': p.get('bathrooms'),
+            'sqft': p.get('sq_ft'),
+            'county_appraisal': p.get('county_appraisal'),
+            'foreclosure_amount': p.get('foreclosure_amount'),
+            'sale_date': p.get('sale_date'),
+            'notice_type': notice_type_val,
+            'stage': stage_val,
+            'attorney_name': p.get('attorney_name'),
+            'source_url': POST_PDF_URL,
+            'scraped_at': datetime.utcnow().isoformat(),
+        }
+
+        # Remove None values (Supabase doesn't like explicit nulls for some fields)
+        row = {k: v for k, v in row.items() if v is not None}
+
+        try:
+            supabase_client.table('properties').insert(row).execute()
+            inserted += 1
+        except Exception as e:
+            log.error(f"Supabase insert failed for {row.get('case_number')}: {e}")
+
+    log.info(f"Wrote {inserted}/{len(properties)} properties to Supabase")
+    return inserted
+
+
 def run_scraper():
     """Main entry point - runs the full pipeline."""
     log.info("=" * 60)
@@ -419,6 +520,9 @@ def run_scraper():
         log.error("ANTHROPIC_API_KEY environment variable is not set.")
         log.error("Set it with: export ANTHROPIC_API_KEY=sk-ant-...")
         return
+
+    # Step 1b: Connect to Supabase (optional - continues if unavailable)
+    supabase_client = connect_to_supabase()
 
     # Step 1: Download the PDF
     try:
@@ -448,6 +552,10 @@ def run_scraper():
 
     # Step 4: Get existing case numbers to avoid duplicates
     existing_cases = get_existing_case_numbers(spreadsheet)
+
+    # Step 4b: Get existing case numbers from Supabase too
+    existing_supabase_cases = get_existing_supabase_cases(supabase_client)
+    existing_cases = existing_cases.union(existing_supabase_cases)
 
     # Step 5: Process each notice
     new_scheduled         = []
@@ -491,10 +599,16 @@ def run_scraper():
         else:
             new_filings.append(notice)
 
-    # Step 6: Write to sheets
+    # Step 6: Write results
     log.info(f"\nResults: {len(new_scheduled)} scheduled sales, {len(new_filings)} new filings")
     log.info(f"Skipped: {skipped_duplicate} duplicates, {skipped_manufactured} manufactured homes")
 
+    # Step 6a: Write to Supabase FIRST
+    all_new_properties = new_scheduled + new_filings
+    if supabase_client and all_new_properties:
+        write_to_supabase(supabase_client, all_new_properties)
+
+    # Step 6b: Write to Google Sheets (secondary sync)
     write_to_sheets(spreadsheet, new_scheduled, new_filings)
 
     log.info("=" * 60)

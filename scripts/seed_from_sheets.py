@@ -49,8 +49,14 @@ def get_sheets_client():
 
 
 def seed_investors(supabase, spreadsheet):
-    """Read Investors tab and create placeholder profiles."""
-    print("\n--- Seeding Investors ---")
+    """Read Investors tab and log investors who need accounts.
+
+    Note: profiles.id references auth.users(id), so we cannot create
+    placeholder profiles. Investors must sign up (or be created via the
+    Auth admin API), which auto-triggers profile creation. After signup,
+    update their deal_room_id to link them to Mike's group.
+    """
+    print("\n--- Investors ---")
     try:
         ws = spreadsheet.worksheet("Investors")
     except gspread.WorksheetNotFound:
@@ -62,36 +68,15 @@ def seed_investors(supabase, spreadsheet):
         print("No investor rows found")
         return
 
+    print(f"Found {len(rows)} investors in Google Sheets:")
     for row in rows:
         email = row.get('Email', '').strip()
         name = row.get('Name', '').strip()
-        phone = row.get('Phone', '').strip()
+        if email:
+            print(f"  - {name} ({email})")
 
-        if not email:
-            print(f"  SKIP: No email for '{name}'")
-            continue
-
-        # Check if profile already exists by email
-        existing = supabase.table('profiles').select('id').eq('email', email).execute()
-        if existing.data:
-            print(f"  SKIP (exists): {email}")
-            continue
-
-        # Insert placeholder profile (no auth.users row - just a profiles row)
-        # Note: this uses service role key which bypasses RLS and FK constraints
-        result = supabase.rpc('create_placeholder_investor', {
-            'p_email': email,
-            'p_full_name': name,
-            'p_phone': phone,
-            'p_deal_room_id': MIKE_DEAL_ROOM_ID
-        }).execute()
-
-        # If RPC doesn't exist, fall back to direct insert
-        # The FK to auth.users means we can't insert directly into profiles
-        # without a corresponding auth.users row. Instead, just log for now.
-        print(f"  NOTE: {email} ({name}) - needs manual signup then deal room link")
-
-    print(f"Done. Investors need to sign up, then update their deal_room_id to {MIKE_DEAL_ROOM_ID}")
+    print(f"\nThese investors need to sign up (or be created via Auth admin API).")
+    print(f"After signup, link to deal room: UPDATE profiles SET deal_room_id = '{MIKE_DEAL_ROOM_ID}' WHERE email = '<email>';")
 
 
 def seed_properties(supabase, spreadsheet):

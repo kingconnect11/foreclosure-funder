@@ -1,4 +1,20 @@
 import { getUserPipeline, getCurrentUser } from '@/lib/queries'
+import { PipelineCard } from '@/components/pipeline-card'
+
+const STAGE_LABELS: Record<string, string> = {
+  watching: 'Watching',
+  researching: 'Researching',
+  site_visit: 'Site Visit',
+  preparing_offer: 'Preparing Offer',
+  offer_submitted: 'Offer Submitted',
+  counter_offered: 'Counter-Offered',
+  offer_accepted: 'Offer Accepted',
+  in_closing: 'In Closing',
+  closed: 'Closed',
+  rejected: 'Rejected',
+  no_response: 'No Response',
+  passed: 'Passed',
+}
 
 export default async function PipelinePage() {
   const user = await getCurrentUser()
@@ -26,28 +42,65 @@ export default async function PipelinePage() {
   const closedCount = stages['closed']?.length ?? 0
   const passedCount = (stages['passed']?.length ?? 0) + (stages['rejected']?.length ?? 0) + (stages['no_response']?.length ?? 0)
 
-  // Frontend teams: replace this JSON dump with kanban board
-  // Data available: pipeline, stages, stats (totalCount, watchingCount, activeCount, closedCount, passedCount), user
+  const orderedStageKeys = Object.keys(stages).sort((a, b) => {
+    const all = Object.keys(STAGE_LABELS)
+    return all.indexOf(a) - all.indexOf(b)
+  })
+
   return (
-    <div style={{ padding: 24, fontFamily: 'monospace' }}>
-      <h1>Pipeline (skeleton)</h1>
-      <h2>Summary</h2>
-      <pre>
-        {JSON.stringify(
-          { totalCount, watchingCount, activeCount, closedCount, passedCount },
-          null,
-          2
-        )}
-      </pre>
-      <h2>Stages</h2>
-      {Object.entries(stages).map(([stage, entries]) => (
-        <div key={stage}>
-          <h3>
-            {stage} ({entries.length})
-          </h3>
-          <pre>{JSON.stringify(entries.slice(0, 2), null, 2)}</pre>
+    <div className="space-y-8">
+      <section>
+        <h1 className="mb-6 font-display text-[28px] font-bold leading-[1.2] text-text-primary">
+          Your Pipeline
+        </h1>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+          {[
+            ['Total in Pipeline', totalCount],
+            ['Watching', watchingCount],
+            ['Active', activeCount],
+            ['Closed', closedCount],
+            ['Passed/Rejected', passedCount],
+          ].map(([label, value]) => (
+            <article key={label as string} className="rounded-card border border-border bg-surface p-4">
+              <p className="mb-2 text-[11px] uppercase tracking-[0.08em] text-text-muted">
+                {label}
+              </p>
+              <p className="font-data text-2xl text-text-primary">{value as number}</p>
+            </article>
+          ))}
         </div>
-      ))}
+      </section>
+
+      {pipeline.length === 0 ? (
+        <p className="rounded-card border border-border bg-surface p-6 text-sm text-text-secondary">
+          Pipeline is empty.
+        </p>
+      ) : (
+        <section className="overflow-x-auto pb-2">
+          <div className="flex min-w-max gap-4">
+            {orderedStageKeys.map((stage) => (
+              <div
+                key={stage}
+                className="w-[320px] rounded-card border border-border bg-bg p-3"
+              >
+                <header className="mb-3 flex items-center justify-between border-b border-border pb-2">
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-text-secondary">
+                    {STAGE_LABELS[stage] ?? stage}
+                  </h2>
+                  <span className="rounded-badge border border-border px-2 py-1 font-data text-[11px] text-text-primary">
+                    {stages[stage].length}
+                  </span>
+                </header>
+                <div className="space-y-3">
+                  {stages[stage].map((entry) => (
+                    <PipelineCard key={entry.id} entry={entry} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

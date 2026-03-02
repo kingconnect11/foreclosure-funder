@@ -25,11 +25,11 @@ export function PropertyNotes({ pipelineId, initialNotes }: { pipelineId: string
   }, [notes, pipelineId, initialNotes])
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 group">
       <div className="flex items-center justify-between">
         <h3 className="text-[20px] font-display text-text-primary">Your Notes</h3>
-        {saveStatus === 'saving' && <span className="text-xs text-text-muted">Saving...</span>}
-        {saveStatus === 'saved' && <span className="text-xs text-success">Saved ✓</span>}
+        {saveStatus === 'saving' && <span className="text-xs text-text-muted transition-opacity">Saving...</span>}
+        {saveStatus === 'saved' && <span className="text-xs text-success transition-opacity">Saved ✓</span>}
       </div>
       <textarea 
         value={notes}
@@ -45,7 +45,7 @@ export function PropertyNotes({ pipelineId, initialNotes }: { pipelineId: string
           }
         }}
         placeholder="Add your research notes here..."
-        className="w-full h-32 bg-surface border border-border rounded p-3 text-sm text-text-primary focus:outline-none focus:border-accent resize-y"
+        className="w-full h-32 bg-surface border border-border rounded p-4 text-sm text-text-primary focus:outline-none focus:border-accent focus:shadow-glow resize-y transition-all duration-300"
       />
     </div>
   )

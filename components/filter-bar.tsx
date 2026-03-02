@@ -1,85 +1,92 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { useCallback, useState, useEffect } from 'react'
+import { Search } from 'lucide-react'
 
 export function FilterBar({ cities }: { cities: string[] }) {
   const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
+  
+  const [searchValue, setSearchValue] = useState(searchParams.get('search') || '')
 
-  const [search, setSearch] = useState(searchParams.get('search') || '')
+  const createQueryString = useCallback(
+    (name: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString())
+      if (value) {
+        params.set(name, value)
+      } else {
+        params.delete(name)
+      }
+      // Reset page to 0 on new filters
+      if (name !== 'page') params.delete('page')
+      return params.toString()
+    },
+    [searchParams]
+  )
 
-  const updateParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (value && value !== 'all') {
-      params.set(key, value)
-    } else {
-      params.delete(key)
-    }
-    params.delete('page')
-    router.push(`/dashboard?${params.toString()}`)
+  const handleSelectChange = (name: string, value: string) => {
+    router.push(pathname + '?' + createQueryString(name, value))
   }
 
+  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString())
-      if (search) {
-        params.set('search', search)
-      } else {
-        params.delete('search')
-      }
-      params.delete('page')
-      
-      const currentSearch = searchParams.get('search') || ''
-      if (currentSearch !== search) {
-          router.push(`/dashboard?${params.toString()}`)
+      if (searchValue !== (searchParams.get('search') || '')) {
+        router.push(pathname + '?' + createQueryString('search', searchValue))
       }
     }, 500)
     return () => clearTimeout(timer)
-  }, [search, router, searchParams])
+  }, [searchValue, router, pathname, createQueryString, searchParams])
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 mb-8">
-      <select 
-        className="bg-surface border border-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent"
-        value={searchParams.get('stage') || 'all'}
-        onChange={(e) => updateParam('stage', e.target.value)}
-      >
-        <option value="all">All Stages</option>
-        <option value="new_filing">New Filing</option>
-        <option value="sale_date_assigned">Sale Date Assigned</option>
-        <option value="upcoming">Upcoming Auction</option>
-      </select>
+    <div className="bg-surface border border-border rounded p-4 mb-8 flex flex-col md:flex-row gap-4 items-center shadow-sm">
+      <div className="flex-1 w-full flex items-center gap-4">
+        <select
+          className="bg-background border border-border rounded px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+          value={searchParams.get('stage') || ''}
+          onChange={(e) => handleSelectChange('stage', e.target.value)}
+        >
+          <option value="">All Stages</option>
+          <option value="new_filing">New Filing</option>
+          <option value="sale_date_assigned">Sale Date Assigned</option>
+          <option value="upcoming">Upcoming Auction</option>
+        </select>
 
-      <select
-        className="bg-surface border border-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent"
-        value={searchParams.get('city') || 'all'}
-        onChange={(e) => updateParam('city', e.target.value)}
-      >
-        <option value="all">All Cities</option>
-        {cities.map(c => (
-          <option key={c} value={c}>{c}</option>
-        ))}
-      </select>
+        <select
+          className="bg-background border border-border rounded px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+          value={searchParams.get('city') || ''}
+          onChange={(e) => handleSelectChange('city', e.target.value)}
+        >
+          <option value="">All Cities</option>
+          {cities.map((city) => (
+            <option key={city} value={city}>{city}</option>
+          ))}
+        </select>
 
-      <select
-        className="bg-surface border border-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent"
-        value={searchParams.get('sort') || 'newest'}
-        onChange={(e) => updateParam('sort', e.target.value)}
-      >
-        <option value="newest">Newest First</option>
-        <option value="sale_date">Sale Date (soonest)</option>
-        <option value="value_high">Appraised Value (High to Low)</option>
-        <option value="value_low">Appraised Value (Low to High)</option>
-      </select>
+        <select
+          className="bg-background border border-border rounded px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+          value={searchParams.get('sort') || ''}
+          onChange={(e) => handleSelectChange('sort', e.target.value)}
+        >
+          <option value="">Newest First</option>
+          <option value="sale_date">Sale Date (soonest)</option>
+          <option value="value_high">Appraisal (High to Low)</option>
+          <option value="value_low">Appraisal (Low to High)</option>
+        </select>
+      </div>
 
-      <input
-        type="text"
-        placeholder="Search address or case..."
-        className="bg-surface border border-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent flex-1"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <div className="relative w-full md:w-64">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted w-4 h-4" />
+        <input
+          type="text"
+          placeholder="Search address or case..."
+          className="w-full bg-background border border-border rounded pl-9 pr-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-all"
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+        />
+      </div>
     </div>
   )
 }

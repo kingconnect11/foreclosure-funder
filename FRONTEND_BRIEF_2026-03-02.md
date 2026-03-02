@@ -2,7 +2,7 @@
 
 **Date:** March 2, 2026
 **Issued by:** Philip King, CTO
-**Purpose:** This document specifies exactly what to build for the Phase 1 frontend. It is a engineering spec, not a wishlist. Every page, component, data field, interaction pattern, and design constraint is defined here. Build what's specified. Don't improvise. Don't add features. Don't skip features.
+**Purpose:** This is a design competition brief. Multiple AI agents are building competing versions of this frontend. The winner will be selected based on visual impact, UX quality, and overall craft. The pages, data model, and Supabase integration are specified precisely — build exactly what's described functionally. The visual design, aesthetic direction, layout creativity, animations, and overall feel are WIDE OPEN. Surprise me. Make something I'd be proud to demo to investors. Make it visually stunning.
 **Reference:** `FOUNDING_ARCHITECTURE.md` for full product context.
 
 ---
@@ -38,88 +38,61 @@ The Supabase backend is live with the following tables populated: `markets` (Sed
 | State management | React Server Components + URL state | No Redux, no Zustand. Server components for data fetching. URL search params for filters. `useState` only for local UI state (modals, dropdowns). |
 | Deployment | Vercel | Existing project: `prj_BNjPyPdakHg2XIeAEydWCltZpbNB` |
 
-### Package whitelist
-
-Install only these. Nothing else without explicit approval.
+### Required packages
 
 ```
 next @supabase/supabase-js @supabase/ssr
 tailwindcss postcss autoprefixer
-lucide-react                     # Icons — consistent, tree-shakeable
 date-fns                         # Date formatting — no moment.js
 clsx                             # Conditional classnames
 ```
 
+### Encouraged additions
+
+You are free to install additional packages that serve the design. Animation libraries (framer-motion, motion, GSAP), icon sets (lucide, phosphor, heroicons, tabler), charting libraries (recharts, visx, chart.js), mapping libraries if you want to show property locations, component primitives (radix-ui, headless-ui) — all fair game. Use your judgment. The only hard rule: no full UI kits that make every app look the same (no Material UI, no Chakra UI, no Ant Design). We want a custom look, not a template.
+
 ---
 
-## 3. DESIGN SYSTEM
+## 3. DESIGN DIRECTION
 
-### Philosophy
+### This is a design competition. Read this section carefully.
 
-This is a financial data product for people who write six-figure checks. It should feel like a Bloomberg terminal crossed with a private wealth management portal — dense with information, confident in its typography, dark by default. It should NOT feel like a consumer app, a marketing site, or a template. No rounded-everything softness. No gratuitous gradients. No illustrations. No empty states with cute drawings. This is a tool for professionals who want data, fast.
+You have full creative control over the visual design. Choose your own colors, typography, layout approach, animation strategy, and aesthetic philosophy. The constraints below are guardrails, not a paint-by-numbers kit.
 
-### Color Palette
+### The audience
 
-```
---background:        #0B1928    /* Deep navy — primary background */
---surface:           #112240    /* Slightly lighter — cards, panels */
---surface-elevated:  #1A3050    /* Hover states, active elements */
---border:            #243B56    /* Subtle borders between elements */
---text-primary:      #E8EDF3    /* Primary text — high contrast on dark */
---text-secondary:    #8899AA    /* Secondary text — labels, metadata */
---text-muted:        #556677    /* Tertiary — timestamps, fine print */
---accent:            #D4952A    /* Amber/gold — CTAs, important badges, active states */
---accent-hover:      #E8A83E    /* Amber lighter — hover state */
---success:           #2D8A5E    /* Green — clean title, positive indicators */
---warning:           #C47A20    /* Orange — clouded title, moderate risk */
---danger:            #B83A3A    /* Red — complex title, high risk, urgent */
---info:              #3A7BD5    /* Blue — informational badges */
-```
+Real estate investors who write five- and six-figure checks. Some are 55-year-old contractors who've flipped 200 houses. Some are 30-year-old first-timers with a line of credit and ambition. The interface needs to feel credible and serious enough for the veterans without being intimidating to newcomers. Think "a tool built by people who understand money" — not "a dashboard template from a UI kit."
 
-### Typography
+### Mood and tone
 
-```
---font-display:  'Playfair Display', Georgia, serif    /* Page titles, section headers only */
---font-body:     'DM Sans', system-ui, sans-serif      /* Body text, labels, UI elements */
---font-data:     'DM Mono', 'Fira Code', monospace     /* Prices, case numbers, dates, stats */
-```
+We've used the phrase "Bloomberg terminal crossed with a private wealth management portal" internally, but that's a starting point, not a ceiling. Here are qualities the design MUST have:
 
-Load via Google Fonts. Playfair Display weights 400 and 700. DM Sans weights 400, 500, 600. DM Mono weight 400.
+- **Data-dense but not cluttered.** Investors want information. Don't hide it behind clicks. But organize it so the eye knows where to go.
+- **Confident typography.** The font choices should feel intentional and distinctive. Use a serif, a sans-serif, a monospace — whatever you want — but commit to them. Financial data (prices, case numbers, dates) should be in a monospace or tabular font so columns align.
+- **Dark-mode primary.** The default theme should be dark. This is a tool people will spend hours in. Light backgrounds with black text get fatiguing. If you want to offer a light mode too, go ahead, but dark is the default.
+- **Not boring.** This is where the previous version of this brief failed. Yes, it's a financial tool. No, it should not look like a government website from 2014. Use motion. Use interesting hover states. Use spatial composition that isn't just "cards in a grid." Think about how the data can be presented in ways that are genuinely beautiful — not decorated, but inherently well-designed. A well-crafted data table IS beautiful. A thoughtful stat card with perfect type hierarchy IS visually striking. You don't need gradients and particles. You need craft.
 
-### Typography Scale
+### What you can choose freely
 
-```
-Page title:      Playfair Display 700, 28px/1.2
-Section header:  Playfair Display 400, 20px/1.3
-Card title:      DM Sans 600, 15px/1.4       (property address)
-Body:            DM Sans 400, 14px/1.5
-Label:           DM Sans 500, 12px/1.4, uppercase, letter-spacing 0.05em
-Data value:      DM Mono 400, 14px/1.4        (prices, case numbers, dates)
-Stat number:     DM Mono 400, 32px/1.1        (dashboard stat cards)
-```
+- **Entire color palette.** Pick whatever works. Deep navy and amber is what the v0 prototype used — you can keep it, riff on it, or go a completely different direction. Jewel tones, earth tones, neon-on-black, muted and editorial — your call. The only requirement: status colors need to be distinguishable (something for "good/clean," something for "warning/moderate risk," something for "danger/urgent").
+- **All typography.** Choose your own fonts. Display, body, data — pick a combination that gives the product a distinctive voice. Load them from Google Fonts or bundle them. Just make sure financial data is in a monospace or tabular-figure font.
+- **Layout and composition.** Grid, flex, asymmetric, sidebar-driven, full-bleed — your call. The page structure (what data goes on which page) is defined in Sections 5-8. How you arrange that data on the screen is up to you.
+- **Animation and interaction.** Page transitions, card hover effects, loading states, micro-interactions, scroll-triggered reveals — go for it if it serves the UX. Or go minimal if that's your aesthetic. Just don't default to "no animation because I wasn't told to animate."
+- **Component styling.** Cards, badges, buttons, tables, inputs — design them from scratch. Make them feel like they belong to this product and no other.
+- **Navigation pattern.** Top nav, side nav, command palette, tab bar — solve the information architecture however you think is best. The routes are defined. The navigation pattern is yours.
+- **Bonus features that enhance the design.** A command palette (cmd+k) for power users? A map view of properties? A mini-chart showing property value trends on a card? Tasteful data visualizations? If it makes the product more compelling and you can build it within the functional spec, do it. Don't add backend features — but frontend enhancements that make the existing data shine are encouraged.
 
-### Spacing and Layout
+### What is fixed (don't change these)
 
-- Base unit: 4px. All spacing is multiples of 4.
-- Page max-width: 1440px, centered, with 24px horizontal padding.
-- Card padding: 20px.
-- Grid gap: 16px.
-- Section spacing: 48px between major sections.
-- No border-radius larger than 6px anywhere. Cards use 4px. Buttons use 4px. Badges use 2px.
-
-### Component Patterns
-
-**Cards:** Background `--surface`, 1px border `--border`, 4px radius, 20px padding. On hover: border shifts to `--surface-elevated`. No box-shadow. No elevation. Flat with borders.
-
-**Badges:** Inline-block, uppercase, 10px font, letter-spacing 0.08em, 2px radius, padding 3px 8px. Color-coded by meaning (green for clean, amber for warning, red for danger, blue for info).
-
-**Buttons — Primary:** Background `--accent`, text `#0B1928` (dark on gold), 4px radius, DM Sans 600 14px, padding 10px 20px. Hover: `--accent-hover`. No shadows.
-
-**Buttons — Secondary:** Background transparent, border 1px `--border`, text `--text-secondary`, same sizing. Hover: border `--text-secondary`.
-
-**Tables:** No zebra striping. 1px bottom border `--border` on each row. Header row uses `--text-muted` color, DM Sans 500 12px uppercase. Data cells use appropriate font (DM Mono for numbers/dates, DM Sans for text).
-
-**Empty states:** Simple text: "No properties saved yet" or "Pipeline is empty." No illustrations, no icons, no CTAs in empty states.
+- The product name is "Foreclosure Funder"
+- Dark mode is the default
+- The pages and their functional requirements (Sections 5-8) must be implemented as specified
+- The data fields on each card/page are specified — display all of them
+- The Supabase integration and auth flow must work as described in Sections 9-10
+- Stage badges must be color-coded by severity/urgency (the exact colors are your choice)
+- Financial numbers must use a monospace or tabular-figure font
+- The app must be responsive down to 375px (iPhone SE)
+- No full UI kits (Material UI, Chakra, Ant Design)
 
 ---
 
@@ -149,13 +122,13 @@ Email, password, confirm password, full name. "Create account" button. Link to `
 
 ### Navigation
 
-Top navigation bar, fixed. Left side: "Foreclosure Funder" text logo in Playfair Display 700, amber color. Right side: navigation links as text (not icons): Dashboard, Pipeline, Admin (admin+ only). Far right: user email displayed in `--text-muted`, and a "Sign out" link.
-
-Mobile: hamburger menu that slides in a panel from the right. Same links.
+Must include: "Foreclosure Funder" branding, navigation links (Dashboard, Pipeline, Admin — admin+ only), user email, and a "Sign out" action. Mobile: responsive navigation pattern of your choice. The navigation pattern (top nav, side nav, tab bar, etc.) and its visual design are entirely up to you.
 
 ---
 
 ## 5. DASHBOARD PAGE (`/dashboard`)
+
+> **DESIGN NOTE FOR SECTIONS 5-8:** The data fields, interactions, and page structure below are **functional requirements** — implement all of them. However, font names (DM Mono, DM Sans, Playfair Display), font sizes (32px, 15px, etc.), CSS variable names (`--surface`, `--text-muted`, etc.), and specific color values are **examples from a previous iteration**. Replace them with your own design system choices. The functional spec tells you WHAT to show. HOW it looks is your creative decision per Section 3.
 
 This is the investor's home screen. It shows a market overview and property listings.
 
@@ -493,22 +466,30 @@ Do not build any of the following. They are planned for later phases.
 
 ## 13. ACCEPTANCE CRITERIA
 
-The build is complete when:
+### Functional (pass/fail — all must work)
 
 1. An unauthenticated user is redirected to `/login` from any route.
 2. A user can sign up, sign in, and sign out.
-3. The dashboard loads properties from Supabase and displays them in the specified card format.
+3. The dashboard loads properties from Supabase and displays them correctly.
 4. Filters (stage, city, sort, search) work and persist in URL params.
 5. Clicking "Save to Pipeline" creates a pipeline entry with stage `watching`.
-6. The property detail page shows all specified fields and the pipeline status.
+6. The property detail page shows all data fields specified in Section 6.
 7. Notes save on the property detail page (debounced auto-save).
-8. The pipeline page shows a kanban layout organized by stage.
+8. The pipeline page organizes properties by stage.
 9. The admin panel shows the investor table and activity feed (visible only to admin+ roles).
 10. The watching count displays on property detail pages.
-11. All typography, colors, spacing, and component patterns match this spec.
-12. The app is responsive down to 375px width (iPhone SE).
-13. No TypeScript errors. No console errors. No hydration mismatches.
-14. Deployed to Vercel and accessible via the project URL.
+11. Responsive down to 375px width (iPhone SE).
+12. No TypeScript errors. No console errors. No hydration mismatches.
+
+### Design (judged by Philip — this is the competition)
+
+13. Does the overall aesthetic feel professional, distinctive, and visually compelling?
+14. Is the typography system intentional and well-executed?
+15. Does the data hierarchy work — can you scan a property card and get the key info in 2 seconds?
+16. Are the interactions polished — hover states, transitions, loading states?
+17. Does it feel like a product someone would pay for, or a template someone downloaded?
+18. Would an investor show this to a friend and say "look at this tool I'm using"?
+19. Does it have at least one moment of genuine visual delight — something that makes you pause and think "that's well done"?
 
 ---
 

@@ -65,7 +65,7 @@ Push to `main` (or create a PR) and Vercel deploys automatically.
 | Classnames | `clsx` |
 | Deployment | Vercel |
 
-Do not add other packages without approval. See `FRONTEND_BRIEF_2026-03-02.md` section 2 for the rationale.
+You are free to install additional packages that serve the design (animation libraries, icon sets, charting, etc.). The only hard rule: no full UI kits (Material UI, Chakra, Ant Design). See `FRONTEND_BRIEF_2026-03-02.md` Section 2 for full details.
 
 ---
 
@@ -386,15 +386,15 @@ Replace every skeleton page and build these components. Each task maps to a Stre
 
 ### B1: Tailwind Design System Config
 
-Extend `tailwind.config.ts` with the color palette, typography scale, and spacing system from the spec. All CSS custom properties and Tailwind theme tokens go here. See Section 6 of this doc for the exact values.
+Extend `tailwind.config.ts` with YOUR color palette, typography, and spacing system. You have full creative control — see `FRONTEND_BRIEF_2026-03-02.md` Section 3 for what's open and what's fixed. Only requirement: dark-mode default and distinguishable status colors.
 
-### B2: Google Fonts + Root Layout
+### B2: Fonts + Root Layout
 
-Update `app/layout.tsx` to load Playfair Display (400, 700), DM Sans (400, 500, 600), and DM Mono (400) via Google Fonts. Set the dark background (`#0B1928`) on `<body>`. Apply the base font (DM Sans) globally.
+Update `app/layout.tsx` to load your chosen fonts. Set a dark background on `<body>`. Financial data (prices, case numbers, dates) must use a monospace or tabular-figure font. Display and body fonts are your choice.
 
 ### B3: Navigation Component
 
-Create `components/nav.tsx`. Fixed top bar. Left: "Foreclosure Funder" logo text (Playfair Display 700, amber). Right: text links (Dashboard, Pipeline, Admin for admin+ only). Far right: user email + "Sign out". Mobile: hamburger menu sliding from right.
+Create `components/nav.tsx`. Must include: "Foreclosure Funder" branding, links (Dashboard, Pipeline, Admin for admin+ only), user email + sign out. Mobile: responsive navigation. Design pattern (top nav, side nav, etc.) is your call.
 
 Wire it into `app/(main)/layout.tsx` -- the layout already fetches `getCurrentUser()` and passes it down.
 
@@ -447,98 +447,42 @@ Role gating is already implemented (redirects investors to `/dashboard`).
 
 ---
 
-## 6. Design System Reference
+## 6. Design Direction
 
-The full design spec is in `FRONTEND_BRIEF_2026-03-02.md` sections 3-4. These values are reproduced here because they are critical for every component.
+**IMPORTANT:** The visual design is YOUR creative decision. Read `FRONTEND_BRIEF_2026-03-02.md` Section 3 carefully — it gives you full creative control over colors, typography, layout, animation, and component styling. The only hard requirements are: dark-mode default, financial data in a monospace/tabular font, responsive to 375px, and no full UI kits (Material UI, Chakra, Ant Design).
 
-### Color Palette
+Choose your own aesthetic. Make it visually stunning. This is a design competition — the version that looks the most professional and distinctive wins. The v0 prototype used deep navy + amber + Playfair Display — you can keep that direction, riff on it, or go somewhere completely different.
 
-```
---background:        #0B1928    /* Deep navy -- primary background */
---surface:           #112240    /* Slightly lighter -- cards, panels */
---surface-elevated:  #1A3050    /* Hover states, active elements */
---border:            #243B56    /* Subtle borders between elements */
---text-primary:      #E8EDF3    /* Primary text -- high contrast on dark */
---text-secondary:    #8899AA    /* Secondary text -- labels, metadata */
---text-muted:        #556677    /* Tertiary -- timestamps, fine print */
---accent:            #D4952A    /* Amber/gold -- CTAs, important badges, active states */
---accent-hover:      #E8A83E    /* Amber lighter -- hover state */
---success:           #2D8A5E    /* Green -- clean title, positive indicators */
---warning:           #C47A20    /* Orange -- clouded title, moderate risk */
---danger:            #B83A3A    /* Red -- complex title, high risk, urgent */
---info:              #3A7BD5    /* Blue -- informational badges */
-```
-
-### Typography
-
-```
---font-display:  'Playfair Display', Georgia, serif    /* Page titles, section headers only */
---font-body:     'DM Sans', system-ui, sans-serif      /* Body text, labels, UI elements */
---font-data:     'DM Mono', 'Fira Code', monospace     /* Prices, case numbers, dates, stats */
-```
-
-Load via Google Fonts. Weights: Playfair Display 400 + 700, DM Sans 400 + 500 + 600, DM Mono 400.
-
-### Typography Scale
-
-| Usage | Font | Weight | Size/Line-height |
-|-------|------|--------|------------------|
-| Page title | Playfair Display | 700 | 28px / 1.2 |
-| Section header | Playfair Display | 400 | 20px / 1.3 |
-| Card title | DM Sans | 600 | 15px / 1.4 |
-| Body | DM Sans | 400 | 14px / 1.5 |
-| Label | DM Sans | 500 | 12px / 1.4, uppercase, letter-spacing 0.05em |
-| Data value | DM Mono | 400 | 14px / 1.4 |
-| Stat number | DM Mono | 400 | 32px / 1.1 |
-
-### Spacing and Layout
-
-- Base unit: 4px. All spacing in multiples of 4.
-- Page max-width: 1440px, centered, 24px horizontal padding.
-- Card padding: 20px.
-- Grid gap: 16px.
-- Section spacing: 48px between major sections.
-- Border-radius: 4px for cards and buttons, 2px for badges. Never larger than 6px.
-
-### Component Patterns
-
-**Cards:** Background `--surface`, 1px border `--border`, 4px radius, 20px padding. Hover: border shifts to `--surface-elevated`. No shadows.
-
-**Badges:** Inline-block, uppercase, 10px font, letter-spacing 0.08em, 2px radius, padding 3px 8px. Stage color coding:
-| Stage | Color | Token |
-|-------|-------|-------|
-| NEW FILING | Blue | `--info` / `#3A7BD5` |
-| SALE DATE SET | Amber | `--warning` / `#C47A20` |
-| AUCTION SCHEDULED | Red | `--danger` / `#B83A3A` |
-
-**Buttons -- Primary:** Background `--accent`, text `#0B1928`, 4px radius, DM Sans 600 14px, padding 10px 20px. Hover: `--accent-hover`.
-
-**Buttons -- Secondary:** Transparent background, 1px border `--border`, text `--text-secondary`. Hover: border `--text-secondary`.
-
-**Tables:** No zebra striping. 1px bottom border `--border` per row. Header: `--text-muted`, DM Sans 500 12px uppercase.
-
-**Empty states:** Simple text only. No illustrations, no icons.
+See `FRONTEND_BRIEF_2026-03-02.md` Section 3 for the full creative brief, including what you can freely choose and what is functionally fixed.
 
 ---
 
 ## 7. Acceptance Criteria
 
-The build is complete when all 14 criteria are met:
+### Functional (pass/fail — all must work)
 
 1. An unauthenticated user is redirected to `/login` from any route.
 2. A user can sign up, sign in, and sign out.
-3. The dashboard loads properties from Supabase and displays them in the specified card format.
+3. The dashboard loads properties from Supabase and displays them correctly.
 4. Filters (stage, city, sort, search) work and persist in URL params.
 5. Clicking "Save to Pipeline" creates a pipeline entry with stage `watching`.
-6. The property detail page shows all specified fields and the pipeline status.
+6. The property detail page shows all data fields specified in the brief Section 6.
 7. Notes save on the property detail page (debounced auto-save).
-8. The pipeline page shows a kanban layout organized by stage.
+8. The pipeline page organizes properties by stage.
 9. The admin panel shows the investor table and activity feed (visible only to admin+ roles).
 10. The watching count displays on property detail pages.
-11. All typography, colors, spacing, and component patterns match the spec.
-12. The app is responsive down to 375px width (iPhone SE).
-13. No TypeScript errors. No console errors. No hydration mismatches.
-14. Deployed to Vercel and accessible via the project URL.
+11. Responsive down to 375px width (iPhone SE).
+12. No TypeScript errors. No console errors. No hydration mismatches.
+
+### Design (judged by the CTO — this is the competition)
+
+13. Does the overall aesthetic feel professional, distinctive, and visually compelling?
+14. Is the typography system intentional and well-executed?
+15. Does the data hierarchy work — can you scan a property card and get the key info in 2 seconds?
+16. Are the interactions polished — hover states, transitions, loading states?
+17. Does it feel like a product someone would pay for, or a template someone downloaded?
+18. Would an investor show this to a friend and say "look at this tool I'm using"?
+19. Does it have at least one moment of genuine visual delight?
 
 ---
 

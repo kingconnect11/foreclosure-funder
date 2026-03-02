@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-text-primary antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent hover:bg-accent-hover text-[#040B14] font-semibold text-sm rounded transition-colors px-5 py-2.5;
+  }
+  .btn-secondary {
+    @apply bg-transparent border border-border hover:border-text-secondary text-text-secondary hover:text-text-primary text-sm rounded transition-colors px-5 py-2.5;
+  }
+  .card {
+    @apply bg-surface border border-border rounded p-5 transition-colors hover:border-surface-elevated;
+  }
+  .input-field {
+    @apply w-full bg-background border border-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all;
+  }
+  .label-text {
+    @apply block text-[12px] font-medium uppercase tracking-[0.05em] text-text-secondary;
+  }
+}

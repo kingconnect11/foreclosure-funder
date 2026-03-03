@@ -5,6 +5,7 @@ import {
   getWatchingCount,
   getDealRoom,
   getCurrentUser,
+  getStageHistory,
 } from '@/lib/queries'
 import { notFound } from 'next/navigation'
 import StageBadge from '@/components/stage-badge'
@@ -32,6 +33,13 @@ export default async function PropertyDetailPage({
       getWatchingCount(property.id),
       user.deal_room_id ? getDealRoom(user.deal_room_id) : null,
     ])
+
+  // Second pass — needs pipeline entry ID
+  const stageHistory = pipelineEntry
+    ? await getStageHistory(pipelineEntry.id)
+    : []
+
+  const googleMapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[65%_35%] gap-8">
@@ -72,6 +80,24 @@ export default async function PropertyDetailPage({
           </div>
         </section>
 
+        {googleMapsKey && property.address && property.city && property.state && property.zip_code && (
+          <section className="flex flex-col gap-4">
+            <h2 className="font-display text-[20px] text-text-primary">Location</h2>
+            <div className="bg-surface border border-border rounded overflow-hidden">
+              <iframe
+                width="100%"
+                height="250"
+                style={{ border: 0 }}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://www.google.com/maps/embed/v1/place?key=${googleMapsKey}&q=${encodeURIComponent(
+                  `${property.address}, ${property.city}, ${property.state} ${property.zip_code}`
+                )}`}
+              />
+            </div>
+          </section>
+        )}
+
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-[20px] text-text-primary">Title & Lien Research</h2>
           <div className="bg-surface border border-border rounded p-5">
@@ -86,7 +112,7 @@ export default async function PropertyDetailPage({
                     {courtResearch.title_status} TITLE
                   </span>
                 </div>
-                
+
                 <div className="flex flex-col gap-2">
                   <span className="text-[12px] font-medium uppercase tracking-[0.05em] text-text-muted">Estimated Offer Range</span>
                   <span className="font-data text-[14px] text-text-primary">
@@ -139,8 +165,8 @@ export default async function PropertyDetailPage({
 
       {/* Right Column */}
       <div className="flex flex-col gap-6">
-        <StageProgress propertyId={property.id} pipelineEntry={pipelineEntry} />
-        
+        <StageProgress propertyId={property.id} pipelineEntry={pipelineEntry} stageHistory={stageHistory} />
+
         {watchingCount > 1 && (
           <div className="bg-surface border border-border rounded p-4 flex items-center justify-center gap-2 text-text-secondary text-sm">
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse"></span>

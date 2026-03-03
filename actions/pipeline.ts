@@ -27,7 +27,7 @@ export async function saveToPipeline(propertyId: string) {
   revalidatePath(`/property/${propertyId}`)
 }
 
-export async function changeStage(pipelineId: string, newStage: string) {
+export async function changeStage(pipelineId: string, newStage: string, notes?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
@@ -45,6 +45,7 @@ export async function changeStage(pipelineId: string, newStage: string) {
     .insert({
       pipeline_id: pipelineId,
       stage: newStage as any,
+      notes: notes ?? null,
     })
 
   if (historyError) throw historyError
@@ -60,7 +61,18 @@ export async function changeStage(pipelineId: string, newStage: string) {
     .eq('investor_id', user.id)
 
   if (error) throw error
+
+  // Get property_id to revalidate the property detail page
+  const { data: entry } = await supabase
+    .from('investor_pipeline')
+    .select('property_id')
+    .eq('id', pipelineId)
+    .single()
+
   revalidatePath('/pipeline')
+  if (entry?.property_id) {
+    revalidatePath(`/property/${entry.property_id}`)
+  }
 }
 
 export async function updateNotes(pipelineId: string, notes: string) {

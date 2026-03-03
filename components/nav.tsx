@@ -1,30 +1,44 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { 
-  LayoutDashboard, 
-  Workflow, 
-  Shield, 
-  Menu, 
-  X, 
+import {
+  LayoutDashboard,
+  Workflow,
+  Shield,
+  Menu,
+  X,
   LogOut,
   Search,
   Bell,
   TrendingUp
 } from 'lucide-react'
 import { signOut } from '@/actions/auth'
-import type { Profile } from '@/lib/types'
+import type { Profile, DealRoom } from '@/lib/types'
 import type { DashboardStats } from '@/lib/queries'
 import clsx from 'clsx'
 
-export default function Nav({ 
-  user, 
-  stats 
-}: { 
+type BrandColors = {
+  primary?: string
+  secondary?: string
+  accent?: string
+}
+
+function parseBrandColors(raw: DealRoom['brand_colors']): BrandColors | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+  return raw as BrandColors
+}
+
+export default function Nav({
+  user,
+  stats,
+  dealRoom,
+}: {
   user: Profile
   stats: DashboardStats
+  dealRoom?: DealRoom | null
 }) {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -46,22 +60,46 @@ export default function Nav({
     }
   }
 
+  const brandColors = parseBrandColors(dealRoom?.brand_colors ?? null)
+  const brandStyle = brandColors
+    ? ({
+        '--brand-primary': brandColors.primary,
+        '--brand-secondary': brandColors.secondary,
+        '--brand-accent': brandColors.accent,
+      } as React.CSSProperties)
+    : undefined
+
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-[280px] bg-surface border-r border-border z-40">
+      <aside
+        className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-[280px] bg-surface border-r border-border z-40"
+        style={brandStyle}
+      >
         {/* Logo Section */}
         <div className="p-6 border-b border-border">
           <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="font-display font-bold text-lg text-foreground leading-tight">
-                Foreclosure
-              </h1>
-              <p className="text-xs text-ink-500 font-medium">Funder</p>
-            </div>
+            {dealRoom?.brand_logo_url ? (
+              <Image
+                src={dealRoom.brand_logo_url}
+                alt={dealRoom.name}
+                width={120}
+                height={32}
+                className="h-8 w-auto object-contain"
+              />
+            ) : (
+              <>
+                <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="font-display font-bold text-lg text-foreground leading-tight">
+                    {dealRoom?.name ?? 'Foreclosure'}
+                  </h1>
+                  {!dealRoom?.name && <p className="text-xs text-ink-500 font-medium">Funder</p>}
+                </div>
+              </>
+            )}
           </Link>
         </div>
 
@@ -143,8 +181,8 @@ export default function Nav({
           </div>
           <button
             onClick={() => signOut()}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 
-                       text-sm font-medium text-ink-600 
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5
+                       text-sm font-medium text-ink-600
                        hover:bg-rice-100 rounded-lg transition-colors"
           >
             <LogOut className="w-4 h-4" />
@@ -157,10 +195,24 @@ export default function Nav({
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-surface border-b border-border z-50">
         <div className="flex items-center justify-between h-full px-4">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-accent rounded-md flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-display font-bold text-foreground">Foreclosure Funder</span>
+            {dealRoom?.brand_logo_url ? (
+              <Image
+                src={dealRoom.brand_logo_url}
+                alt={dealRoom.name}
+                width={100}
+                height={28}
+                className="h-7 w-auto object-contain"
+              />
+            ) : (
+              <>
+                <div className="w-7 h-7 bg-accent rounded-md flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-display font-bold text-foreground">
+                  {dealRoom?.name ?? 'Foreclosure Funder'}
+                </span>
+              </>
+            )}
           </Link>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

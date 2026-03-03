@@ -1,11 +1,18 @@
+'use client'
+
 import { formatDistanceToNow } from 'date-fns'
+import { useState } from 'react'
 import type { DealRoomActivityEntry } from '@/lib/queries'
 import { Activity, ArrowRightCircle, FileCheck, DollarSign } from 'lucide-react'
 import clsx from 'clsx'
 
-interface ActivityFeedProps {
-  activity: DealRoomActivityEntry[]
-}
+const ALL_STAGES = [
+  'watching', 'researching', 'site_visit', 'preparing_offer',
+  'offer_submitted', 'counter_offered', 'offer_accepted',
+  'in_closing', 'closed', 'rejected', 'no_response', 'passed'
+]
+
+const formatStageLabel = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 
 const STAGE_ICONS: Record<string, React.ReactNode> = {
   watching: <Activity className="w-4 h-4" />,
@@ -28,7 +35,13 @@ const STAGE_COLORS: Record<string, string> = {
   passed: 'text-ink-400 bg-ink-100',
 }
 
+interface ActivityFeedProps {
+  activity: DealRoomActivityEntry[]
+}
+
 export function ActivityFeed({ activity }: ActivityFeedProps) {
+  const [stageFilter, setStageFilter] = useState<string>('all')
+
   if (!activity || activity.length === 0) {
     return (
       <div className="zen-card p-12 text-center">
@@ -43,56 +56,85 @@ export function ActivityFeed({ activity }: ActivityFeedProps) {
     )
   }
 
+  const filtered = stageFilter === 'all'
+    ? activity
+    : activity.filter(e => e.stage === stageFilter)
+
   return (
-    <div className="zen-card divide-y divide-border">
-      {activity.map((entry) => {
-        const investor = entry.profiles?.full_name || 'An investor'
-        const address = entry.properties?.address || 'a property'
-        const stageColor = STAGE_COLORS[entry.stage || ''] || 'text-ink-500 bg-ink-100'
-        const stageLabel = entry.stage?.replace(/_/g, ' ') || 'updated'
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <label className="text-xs font-semibold uppercase tracking-wider text-ink-500 whitespace-nowrap">
+          Filter by stage:
+        </label>
+        <select
+          value={stageFilter}
+          onChange={e => setStageFilter(e.target.value)}
+          className="bg-surface border border-border rounded-lg px-3 py-1.5 text-sm text-foreground
+                     focus:outline-none focus:border-accent/50"
+        >
+          <option value="all">All Stages</option>
+          {ALL_STAGES.map(stage => (
+            <option key={stage} value={stage}>{formatStageLabel(stage)}</option>
+          ))}
+        </select>
+      </div>
 
-        return (
-          <div 
-            key={entry.id} 
-            className="flex items-start gap-4 p-5 hover:bg-rice-50/50 transition-colors"
-          >
-            {/* Stage icon */}
-            <div className={clsx(
-              'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
-              stageColor
-            )}>
-              {STAGE_ICONS[entry.stage || ''] || <ArrowRightCircle className="w-4 h-4" />}
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-foreground">
-                <span className="font-semibold">{investor}</span>
-                {' '}
-                {entry.stage === 'watching' ? 'saved' : 'moved'}
-                {' '}
-                <span className="font-medium">{address}</span>
-                {' '}
-                {entry.stage !== 'watching' && (
-                  <>
-                    to <span className={clsx('font-semibold', stageColor.split(' ')[0])}>{stageLabel}</span>
-                  </>
-                )}
-              </p>
-              
-              {entry.offer_amount && (
-                <p className="text-sm text-ink-500 mt-1">
-                  Offer: <span className="font-mono font-semibold text-accent">${entry.offer_amount.toLocaleString()}</span>
-                </p>
-              )}
-              
-              <p className="text-xs text-ink-400 mt-2">
-                {entry.updated_at ? formatDistanceToNow(new Date(entry.updated_at), { addSuffix: true }) : ''}
-              </p>
-            </div>
+      <div className="zen-card divide-y divide-border">
+        {filtered.length === 0 ? (
+          <div className="px-5 py-8 text-center text-ink-500 text-sm">
+            No activity for this stage.
           </div>
-        )
-      })}
+        ) : (
+          filtered.map((entry) => {
+            const investor = entry.profiles?.full_name || 'An investor'
+            const address = entry.properties?.address || 'a property'
+            const stageColor = STAGE_COLORS[entry.stage || ''] || 'text-ink-500 bg-ink-100'
+            const stageLabel = entry.stage?.replace(/_/g, ' ') || 'updated'
+
+            return (
+              <div
+                key={entry.id}
+                className="flex items-start gap-4 p-5 hover:bg-rice-50/50 transition-colors"
+              >
+                {/* Stage icon */}
+                <div className={clsx(
+                  'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
+                  stageColor
+                )}>
+                  {STAGE_ICONS[entry.stage || ''] || <ArrowRightCircle className="w-4 h-4" />}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground">
+                    <span className="font-semibold">{investor}</span>
+                    {' '}
+                    {entry.stage === 'watching' ? 'saved' : 'moved'}
+                    {' '}
+                    <span className="font-medium">{address}</span>
+                    {' '}
+                    {entry.stage !== 'watching' && (
+                      <>
+                        to <span className={clsx('font-semibold', stageColor.split(' ')[0])}>{stageLabel}</span>
+                      </>
+                    )}
+                  </p>
+
+                  {entry.offer_amount && (
+                    <p className="text-sm text-ink-500 mt-1">
+                      Offer: <span className="font-mono font-semibold text-accent">${entry.offer_amount.toLocaleString()}</span>
+                    </p>
+                  )}
+
+                  <p className="text-xs text-ink-400 mt-2">
+                    {entry.updated_at ? formatDistanceToNow(new Date(entry.updated_at), { addSuffix: true }) : ''}
+                  </p>
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
     </div>
   )
 }

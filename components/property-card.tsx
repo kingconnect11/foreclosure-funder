@@ -28,7 +28,6 @@ export function PropertyCard({ property, isSavedInitial }: { property: Property,
   }
 
   const urgency = saleDateUrgency(property.sale_date)
-  const dateColor = urgency === 'danger' ? 'text-danger' : urgency === 'warning' ? 'text-warning' : 'text-text-secondary'
 
   return (
     <div 
@@ -61,8 +60,22 @@ export function PropertyCard({ property, isSavedInitial }: { property: Property,
       </div>
 
       {property.sale_date && (
-        <div className={clsx("font-data text-[13px]", dateColor)}>
-          Sale: {formatDate(property.sale_date)}
+        <div className={clsx(
+          "font-data text-[13px] flex items-center gap-2 flex-wrap",
+          urgency === 'danger' && "text-danger",
+          urgency === 'warning' && "text-warning",
+          urgency === 'normal' && "text-text-secondary"
+        )}>
+          {urgency === 'danger' && (
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-danger opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-danger" />
+            </span>
+          )}
+          {urgency === 'warning' && (
+            <span className="inline-block h-2 w-2 rounded-full bg-warning shrink-0" />
+          )}
+          <span>Sale: {formatDate(property.sale_date)}</span>
         </div>
       )}
 

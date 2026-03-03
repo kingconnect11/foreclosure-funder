@@ -84,9 +84,22 @@ export default async function PropertyDetailPage({
           <section className="flex flex-col gap-4">
             <h2 className="font-display text-[20px] text-text-primary">Location</h2>
             <div className="bg-surface border border-border rounded overflow-hidden">
+              {/* Street View — shows actual photo of the property */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://maps.googleapis.com/maps/api/streetview?size=800x300&location=${encodeURIComponent(
+                  `${property.address}, ${property.city}, ${property.state} ${property.zip_code}`
+                )}&key=${googleMapsKey}`}
+                alt={`Street view of ${property.address}`}
+                width={800}
+                height={300}
+                className="w-full object-cover"
+                loading="lazy"
+              />
+              {/* Interactive embed below the photo */}
               <iframe
                 width="100%"
-                height="250"
+                height="220"
                 style={{ border: 0 }}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"

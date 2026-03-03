@@ -7,6 +7,13 @@ import {
   getCurrentUser,
 } from '@/lib/queries'
 import { notFound } from 'next/navigation'
+import { PropertyHeader } from '@/components/property-header'
+import { PropertyDetailsGrid } from '@/components/property-details-grid'
+import { CourtResearchSection } from '@/components/court-research'
+import { NotesSection } from '@/components/notes-section'
+import { PipelineStatusCard } from '@/components/pipeline-status-card'
+import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
 
 export default async function PropertyDetailPage({
   params,
@@ -28,28 +35,39 @@ export default async function PropertyDetailPage({
       user.deal_room_id ? getDealRoom(user.deal_room_id) : null,
     ])
 
-  // Frontend teams: replace this JSON dump with the two-column layout
-  // Data available: property, courtResearch, pipelineEntry, watchingCount, dealRoom, user
   return (
-    <div style={{ padding: 24, fontFamily: 'monospace' }}>
-      <h1>Property Detail (skeleton)</h1>
-      <h2>{property.address}</h2>
-      <p>
-        {property.city}, {property.state} {property.zip_code}
-      </p>
-      <h3>Property Data</h3>
-      <pre>{JSON.stringify(property, null, 2)}</pre>
-      <h3>Court Research</h3>
-      <pre>{JSON.stringify(courtResearch, null, 2)}</pre>
-      <h3>Pipeline Entry</h3>
-      <pre>{JSON.stringify(pipelineEntry, null, 2)}</pre>
-      <p>Watching count: {watchingCount}</p>
-      {dealRoom && (
-        <>
-          <h3>Deal Room</h3>
-          <pre>{JSON.stringify(dealRoom, null, 2)}</pre>
-        </>
-      )}
+    <div className="animate-in fade-in duration-500 max-w-7xl mx-auto">
+      <Link href="/dashboard" className="inline-flex items-center text-sm text-muted hover:text-foreground mb-6 transition-colors">
+        <ChevronLeft className="h-4 w-4 mr-1" />
+        Back to Dashboard
+      </Link>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column - Primary Content (8 columns) */}
+        <div className="lg:col-span-8">
+          <PropertyHeader property={property} />
+          <PropertyDetailsGrid property={property} />
+          <CourtResearchSection research={courtResearch} />
+          <NotesSection 
+            pipelineId={pipelineEntry?.id} 
+            initialNotes={pipelineEntry?.notes} 
+            groupNotes={pipelineEntry?.group_notes}
+            dealRoomName={dealRoom?.name}
+          />
+        </div>
+
+        {/* Right Column - Sidebar (4 columns) */}
+        <div className="lg:col-span-4">
+          <div className="sticky top-6">
+            <PipelineStatusCard 
+              propertyId={property.id}
+              pipelineEntry={pipelineEntry ? { id: pipelineEntry.id, stage: pipelineEntry.stage } : null}
+              watchingCount={watchingCount}
+              dealRoom={dealRoom}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

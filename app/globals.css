@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #0A0B0A;
+    --foreground: #EDEDED;
+    --muted: #A1A3A1;
+    --surface-1: #121413;
+    --surface-2: #1A1C1B;
+    --border: #272A28;
+    --accent-pine: #115E41;
+    --accent-crimson: #991B1B;
+    --accent-slate: #1E3A8A;
+
+    --danger: #991B1B;
+    --warning: #B45309; /* Deep amber/orange for warning, not gold */
+    --info: #1E3A8A;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}

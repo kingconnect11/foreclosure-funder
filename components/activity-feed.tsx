@@ -1,22 +1,23 @@
 import { formatDistanceToNow } from 'date-fns'
+import type { DealRoomActivityEntry } from '@/lib/queries'
 
-export function ActivityFeed({ activity }: { activity: any[] }) {
+export function ActivityFeed({ activity }: { activity: DealRoomActivityEntry[] }) {
   if (!activity || activity.length === 0) {
     return (
       <div className="dossier-card p-10 text-center text-text-muted text-sm">
-        No recent activity found on the ledger.
+        No activity yet. Investors will appear here once they start saving properties.
       </div>
     )
   }
 
-  const formatAction = (entry: any) => {
+  const formatAction = (entry: DealRoomActivityEntry) => {
     const investor = entry.profiles?.full_name || 'An investor'
     const address = entry.properties?.address || 'a property'
 
     if (entry.stage === 'watching') {
       return (
         <>
-          <span className="font-semibold text-text-primary">{investor}</span> appended <span className="font-medium text-text-primary">{address}</span> to their pipeline
+          <span className="font-semibold text-text-primary">{investor}</span> saved <span className="font-medium text-text-primary">{address}</span> to pipeline
         </>
       )
     }
@@ -24,14 +25,14 @@ export function ActivityFeed({ activity }: { activity: any[] }) {
     if (entry.stage === 'offer_submitted' && entry.offer_amount) {
       return (
         <>
-          <span className="font-semibold text-text-primary">{investor}</span> submitted an offer on <span className="font-medium text-text-primary">{address}</span> for <span className="font-data text-accent">${entry.offer_amount.toLocaleString()}</span>
+          <span className="font-semibold text-text-primary">{investor}</span> submitted offer on <span className="font-medium text-text-primary">{address}</span> for <span className="financial-value text-accent">${entry.offer_amount.toLocaleString()}</span>
         </>
       )
     }
 
     return (
       <>
-        <span className="font-semibold text-text-primary">{investor}</span> transitioned <span className="font-medium text-text-primary">{address}</span> to <span className="uppercase text-xs tracking-wider font-semibold text-accent">{entry.stage?.replace(/_/g, ' ')}</span>
+        <span className="font-semibold text-text-primary">{investor}</span> moved <span className="font-medium text-text-primary">{address}</span> to <span className="uppercase text-xs tracking-wider font-semibold text-accent">{entry.stage?.replace(/_/g, ' ')}</span>
       </>
     )
   }

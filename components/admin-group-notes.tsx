@@ -4,25 +4,32 @@ import { useState, useEffect } from 'react'
 import { updateGroupNotes } from '@/actions/admin'
 
 export function AdminGroupNotes({ pipelineId, initialNotes }: { pipelineId: string, initialNotes: string | null }) {
-  const [notes, setNotes] = useState(initialNotes || '')
+  const [notes, setNotes] = useState(initialNotes ?? '')
+  const [lastSaved, setLastSaved] = useState(initialNotes ?? '')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
 
   useEffect(() => {
+    setNotes(initialNotes ?? '')
+    setLastSaved(initialNotes ?? '')
+  }, [pipelineId, initialNotes])
+
+  useEffect(() => {
     const timer = setTimeout(async () => {
-      if (notes !== (initialNotes || '')) {
+      if (notes !== lastSaved) {
         setSaveStatus('saving')
         try {
           await updateGroupNotes(pipelineId, notes)
+          setLastSaved(notes)
           setSaveStatus('saved')
           setTimeout(() => setSaveStatus('idle'), 2000)
-        } catch (e) {
+        } catch {
           setSaveStatus('idle')
         }
       }
     }, 2000)
 
     return () => clearTimeout(timer)
-  }, [notes, pipelineId, initialNotes])
+  }, [notes, pipelineId, lastSaved])
 
   return (
     <div className="flex flex-col gap-3 mt-8 relative">
@@ -40,17 +47,20 @@ export function AdminGroupNotes({ pipelineId, initialNotes }: { pipelineId: stri
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         onBlur={async () => {
-          if (notes !== (initialNotes || '')) {
+          if (notes !== lastSaved) {
             setSaveStatus('saving')
             try {
               await updateGroupNotes(pipelineId, notes)
+              setLastSaved(notes)
               setSaveStatus('saved')
               setTimeout(() => setSaveStatus('idle'), 2000)
-            } catch (e) {}
+            } catch {
+              setSaveStatus('idle')
+            }
           }
         }}
         placeholder="Add instructions or context for the deal room..."
-        className="w-full min-h-[120px] bg-surface border border-accent/20 rounded-sm p-4 text-sm text-text-primary focus:outline-none focus:border-accent resize-y transition-colors font-body"
+        className="w-full min-h-[120px] bg-surface border border-accent/20 rounded-ledger p-4 text-sm text-text-primary focus:outline-none focus:border-accent resize-y transition-colors font-body"
       />
     </div>
   )

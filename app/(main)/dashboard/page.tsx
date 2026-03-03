@@ -9,6 +9,7 @@ import { StatCard } from '@/components/stat-card'
 import { FilterBar } from '@/components/filter-bar'
 import { PropertyCard } from '@/components/property-card'
 import Link from 'next/link'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 
 export default async function DashboardPage({
   searchParams,
@@ -31,7 +32,7 @@ export default async function DashboardPage({
       city: params.city,
       sort: params.sort,
       search: params.search,
-      page: params.page ? parseInt(params.page) : 0,
+      page: params.page ? parseInt(params.page, 10) : 1,
     }),
     getDistinctCities(),
     getDashboardStats(user.id),
@@ -41,7 +42,7 @@ export default async function DashboardPage({
   const savedPropertyIds = new Set(pipeline.map(p => p.property_id))
 
   const totalPages = Math.ceil(total / 30)
-  const currentPage = params.page ? parseInt(params.page) : 0
+  const currentPage = params.page ? parseInt(params.page, 10) : 1
 
   const getPageUrl = (page: number) => {
     const p = new URLSearchParams()
@@ -49,18 +50,26 @@ export default async function DashboardPage({
     if (params.city) p.set('city', params.city)
     if (params.sort) p.set('sort', params.sort)
     if (params.search) p.set('search', params.search)
-    if (page > 0) p.set('page', page.toString())
+    if (page > 1) p.set('page', page.toString())
     return `/dashboard?${p.toString()}`
   }
 
   return (
-    <div>
-      <div className="flex items-baseline justify-between mb-8 pb-4 ledger-divider">
-        <h1 className="font-display text-4xl text-text-primary">Dashboard</h1>
-        <span className="font-data text-xs text-text-muted uppercase tracking-widest hidden sm:inline-block">Dossier Overview</span>
+    <section>
+      <div className="flex flex-wrap items-end justify-between mb-6 gap-3">
+        <div>
+          <p className="kicker mb-1">Portfolio Command</p>
+          <h1 className="font-display text-4xl text-text-primary">Dashboard</h1>
+        </div>
+        <div className="soft-panel px-4 py-3">
+          <p className="kicker mb-0.5">Pipeline Signal</p>
+          <p className="text-sm text-text-secondary">
+            {stats.inPipeline} tracked properties, {stats.auctionScheduled} auctions coming up
+          </p>
+        </div>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <StatCard label="Total Active" value={stats.totalActive} />
         <StatCard label="Auction Scheduled" value={stats.auctionScheduled} />
         <StatCard label="New This Week" value={stats.newThisWeek} />
@@ -69,7 +78,7 @@ export default async function DashboardPage({
 
       <FilterBar cities={cities} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
         {properties.map(property => (
           <PropertyCard 
             key={property.id} 
@@ -79,42 +88,53 @@ export default async function DashboardPage({
         ))}
       </div>
 
-      {properties.length === 0 && (
-        <div className="dossier-card text-center py-20 flex flex-col items-center">
-          <p className="font-display text-2xl text-text-muted mb-2">No Properties Found</p>
-          <p className="text-sm text-text-secondary">Adjust your filters to see more results.</p>
+      {properties.length === 0 ? (
+        <div className="dossier-card text-center py-16 px-6 flex flex-col items-center">
+          <p className="font-display text-3xl text-text-primary mb-2">No matches for current filters</p>
+          <p className="text-sm text-text-secondary max-w-[540px]">
+            No properties match your filters. Try adjusting your search or stage filter.
+          </p>
+          <Link href="/dashboard" className="btn-secondary mt-4">
+            Clear all filters
+          </Link>
         </div>
-      )}
+      ) : null}
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-8 ledger-divider">
-          {currentPage > 0 ? (
+        <div className="flex items-center justify-between pt-2">
+          {currentPage > 1 ? (
             <Link 
-              href={getPageUrl(currentPage - 1)}
-              className="btn-secondary"
+              href={getPageUrl(Math.max(1, currentPage - 1))}
+              className="btn-secondary inline-flex items-center gap-2"
             >
+              <ArrowLeft className="w-4 h-4" />
               Previous
             </Link>
           ) : (
-            <div className="px-6 py-2 border border-border text-border rounded-sm text-sm cursor-not-allowed">Previous</div>
+            <div className="px-4 py-2 border border-border text-text-muted rounded-lg text-sm cursor-not-allowed">
+              Previous
+            </div>
           )}
           
-          <span className="text-xs font-data text-text-secondary uppercase tracking-wider">
-            Page {currentPage + 1} of {totalPages}
+          <span className="text-xs font-data text-text-secondary uppercase tracking-wider financial-value">
+            Page {currentPage} of {totalPages}
           </span>
           
-          {currentPage < totalPages - 1 ? (
+          {currentPage < totalPages ? (
             <Link 
               href={getPageUrl(currentPage + 1)}
-              className="btn-secondary"
+              className="btn-secondary inline-flex items-center gap-2"
             >
               Next
+              <ArrowRight className="w-4 h-4" />
             </Link>
           ) : (
-            <div className="px-6 py-2 border border-border text-border rounded-sm text-sm cursor-not-allowed">Next</div>
+            <div className="px-4 py-2 border border-border text-text-muted rounded-lg text-sm cursor-not-allowed">
+              Next
+            </div>
           )}
         </div>
       )}
-    </div>
+    </section>
   )
 }

@@ -2,9 +2,10 @@
 
 import { PipelineStage, InvestorPipeline } from '@/lib/types'
 import { saveToPipeline, changeStage, removeFromPipeline } from '@/actions/pipeline'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Check } from 'lucide-react'
 import clsx from 'clsx'
+import { useRouter } from 'next/navigation'
 
 const STAGES: { value: PipelineStage; label: string }[] = [
   { value: 'watching', label: 'Watching' },
@@ -29,12 +30,23 @@ export function StageProgress({
   pipelineEntry: InvestorPipeline | null 
 }) {
   const [isSaving, setIsSaving] = useState(false)
+  const [errorText, setErrorText] = useState<string | null>(null)
+  const [currentStage, setCurrentStage] = useState<PipelineStage | null>(pipelineEntry?.stage ?? null)
+  const router = useRouter()
+
+  useEffect(() => {
+    setCurrentStage(pipelineEntry?.stage ?? null)
+  }, [pipelineEntry?.id, pipelineEntry?.stage])
 
   const handleSave = async () => {
     if (isSaving) return
     setIsSaving(true)
+    setErrorText(null)
     try {
       await saveToPipeline(propertyId)
+      router.refresh()
+    } catch {
+      setErrorText('Could not add to pipeline. Try again.')
     } finally {
       setIsSaving(false)
     }
@@ -42,9 +54,16 @@ export function StageProgress({
 
   const handleStageChange = async (newStage: PipelineStage) => {
     if (!pipelineEntry || isSaving) return
+    const previousStage = currentStage
+    setCurrentStage(newStage)
     setIsSaving(true)
+    setErrorText(null)
     try {
       await changeStage(pipelineEntry.id, newStage)
+      router.refresh()
+    } catch {
+      setCurrentStage(previousStage ?? pipelineEntry.stage ?? null)
+      setErrorText('Stage update failed. Please retry.')
     } finally {
       setIsSaving(false)
     }
@@ -53,8 +72,12 @@ export function StageProgress({
   const handleRemove = async () => {
     if (!pipelineEntry || isSaving) return
     setIsSaving(true)
+    setErrorText(null)
     try {
       await removeFromPipeline(pipelineEntry.id)
+      router.refresh()
+    } catch {
+      setErrorText('Could not remove this property right now.')
     } finally {
       setIsSaving(false)
     }
@@ -74,19 +97,20 @@ export function StageProgress({
         >
           {isSaving ? 'Adding...' : 'Add to Pipeline'}
         </button>
+        {errorText ? <p className="text-xs text-danger mt-2">{errorText}</p> : null}
       </div>
     )
   }
 
-  const currentIndex = STAGES.findIndex(s => s.value === pipelineEntry.stage)
+  const currentIndex = STAGES.findIndex((s) => s.value === currentStage)
 
   return (
     <div className="dossier-card flex flex-col p-6 relative">
       <div className="flex items-center justify-between mb-8 pb-4 ledger-divider">
         <h3 className="font-display text-2xl text-text-primary">Pipeline Status</h3>
         <select 
-          className="bg-transparent border border-border rounded-sm px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-text-primary focus:border-accent focus:outline-none transition-colors w-[160px]"
-          value={pipelineEntry.stage || ''}
+          className="bg-transparent border border-border rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-text-primary focus:border-accent focus:outline-none transition-colors w-[160px]"
+          value={currentStage || ''}
           onChange={(e) => handleStageChange(e.target.value as PipelineStage)}
           disabled={isSaving}
         >
@@ -125,7 +149,7 @@ export function StageProgress({
                   {stage.label}
                 </span>
                 {isCurrent && pipelineEntry.stage_changed_at && (
-                  <span className="text-xs font-data text-text-muted mt-1">
+                  <span className="text-xs financial-value text-text-muted mt-1">
                     Updated {new Date(pipelineEntry.stage_changed_at).toLocaleDateString()}
                   </span>
                 )}
@@ -143,6 +167,7 @@ export function StageProgress({
         >
           Remove from Pipeline
         </button>
+        {errorText ? <p className="text-xs text-danger mt-2">{errorText}</p> : null}
       </div>
     </div>
   )

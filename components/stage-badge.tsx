@@ -16,17 +16,17 @@ export default function StageBadge({ stage, className }: StageBadgeProps) {
   switch (stage) {
     case 'new_filing':
       label = 'New Filing'
-      colorClass = 'bg-info/10 text-info border-info/20'
+      colorClass = 'bg-info/10 text-info border-info/30'
       dotClass = 'bg-info'
       break
     case 'sale_date_assigned':
       label = 'Sale Date Set'
-      colorClass = 'bg-warning/10 text-warning border-warning/20'
+      colorClass = 'bg-warning/10 text-warning border-warning/30'
       dotClass = 'bg-warning'
       break
     case 'upcoming':
       label = 'Auction Scheduled'
-      colorClass = 'bg-danger/10 text-danger border-danger/20'
+      colorClass = 'bg-danger/10 text-danger border-danger/30'
       dotClass = 'bg-danger'
       break
     case 'sold':
@@ -39,11 +39,11 @@ export default function StageBadge({ stage, className }: StageBadgeProps) {
 
   return (
     <span className={clsx(
-      "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[10px] font-medium uppercase tracking-[0.08em] border",
+      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-[0.08em] border',
       colorClass,
       className
     )}>
-      <span className={clsx("w-1.5 h-1.5 rounded-full", dotClass)}></span>
+      <span className={clsx('w-1.5 h-1.5 rounded-full', dotClass)} />
       {label}
     </span>
   )

@@ -39,45 +39,52 @@ export default async function PipelinePage() {
   const activeColumns = STAGES.filter(stage => stages[stage] && stages[stage].length > 0)
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-104px)]">
-      <div className="mb-10 flex flex-col gap-8">
-        <div className="flex items-baseline justify-between ledger-divider pb-4">
-          <h1 className="font-display text-4xl text-text-primary">Pipeline</h1>
-          <span className="font-data text-xs text-text-muted uppercase tracking-widest hidden sm:inline-block">CRM / Kanban</span>
+    <section className="flex flex-col">
+      <div className="mb-8 flex flex-col gap-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="kicker mb-1">Investor CRM</p>
+            <h1 className="font-display text-4xl text-text-primary">Pipeline</h1>
+          </div>
+          <p className="text-sm text-text-secondary soft-panel px-4 py-2">
+            Track progress across all active acquisition stages.
+          </p>
         </div>
         
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {[
-            { label: 'Total', value: totalCount },
+            { label: 'Total in Pipeline', value: totalCount },
             { label: 'Watching', value: watchingCount },
             { label: 'Active', value: activeCount },
             { label: 'Closed', value: closedCount },
             { label: 'Passed/Rejected', value: passedCount }
           ].map(stat => (
-            <div key={stat.label} className="dossier-card px-6 py-4 flex flex-col items-start gap-2 min-w-[140px]">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary">{stat.label}</span>
+            <div key={stat.label} className="dossier-card px-4 py-4 flex flex-col items-start gap-2 min-w-[140px]">
+              <span className="kicker">{stat.label}</span>
               <span className="font-display text-3xl text-text-primary">{stat.value}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar">
+      <div className="flex-1 overflow-x-auto pb-2">
         <div className="flex gap-6 min-h-full items-start">
           {activeColumns.length === 0 && (
-            <div className="dossier-card w-full text-center py-16">
-              <p className="font-display text-2xl text-text-muted mb-2">Pipeline Empty</p>
-              <p className="text-sm text-text-secondary">Save properties from the dashboard to initialize tracking.</p>
+            <div className="dossier-card w-full text-center py-16 px-4">
+              <p className="font-display text-3xl text-text-primary mb-2">Your pipeline is empty</p>
+              <p className="text-sm text-text-secondary">
+                Your pipeline is empty. Browse the dashboard to save your first property.
+              </p>
             </div>
           )}
           
           {activeColumns.map(stage => (
-            <div key={stage} className="flex flex-col gap-4 w-[320px] flex-shrink-0">
-              <div className="flex items-center justify-between border-b-2 border-border pb-3">
-                <h2 className="text-xs font-bold uppercase tracking-widest text-text-secondary">
+            <div key={stage} className="soft-panel p-3 flex flex-col gap-4 w-[320px] flex-shrink-0">
+              <div className="flex items-center justify-between pb-2 border-b border-border border-dashed">
+                <h2 className="kicker">
                   {formatStage(stage)}
                 </h2>
-                <span className="font-data text-xs text-accent">
+                <span className="financial-value text-xs text-accent">
                   {stages[stage].length}
                 </span>
               </div>
@@ -90,6 +97,6 @@ export default async function PipelinePage() {
           ))}
         </div>
       </div>
-    </div>
+    </section>
   )
 }

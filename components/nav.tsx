@@ -1,14 +1,26 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { Menu, X } from 'lucide-react'
 import { signOut } from '@/actions/auth'
-import type { Profile } from '@/lib/types'
+import type { Profile, DealRoom } from '@/lib/types'
 import clsx from 'clsx'
 
-export default function Nav({ user }: { user: Profile }) {
+type BrandColors = {
+  primary?: string
+  secondary?: string
+  accent?: string
+}
+
+function parseBrandColors(raw: DealRoom['brand_colors']): BrandColors | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+  return raw as BrandColors
+}
+
+export default function Nav({ user, dealRoom }: { user: Profile; dealRoom?: DealRoom | null }) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -20,12 +32,36 @@ export default function Nav({ user }: { user: Profile }) {
     ...(isAdmin ? [{ href: '/admin', label: 'Admin' }] : []),
   ]
 
+  const brandColors = parseBrandColors(dealRoom?.brand_colors ?? null)
+  const brandStyle = brandColors
+    ? ({
+        '--brand-primary': brandColors.primary,
+        '--brand-secondary': brandColors.secondary,
+        '--brand-accent': brandColors.accent,
+      } as React.CSSProperties)
+    : undefined
+
   return (
-    <nav className="sticky top-0 z-50 w-full bg-background border-b border-border">
+    <nav className="sticky top-0 z-50 w-full bg-background border-b border-border" style={brandStyle}>
       <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link href="/dashboard" className="font-display font-bold text-[20px] text-accent tracking-wide">
-            Foreclosure Funder
+          <Link href="/dashboard" className="flex items-center gap-2">
+            {dealRoom?.brand_logo_url ? (
+              <Image
+                src={dealRoom.brand_logo_url}
+                alt={dealRoom.name}
+                width={120}
+                height={32}
+                className="h-8 w-auto object-contain"
+              />
+            ) : (
+              <span
+                className="font-display font-bold text-[20px] tracking-wide"
+                style={brandColors?.accent ? { color: brandColors.accent } : undefined}
+              >
+                {dealRoom?.name ?? 'Foreclosure Funder'}
+              </span>
+            )}
           </Link>
           <div className="hidden md:flex items-center gap-6">
             {links.map((link) => (

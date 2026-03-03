@@ -7,7 +7,7 @@ import {
   getCurrentUser,
 } from '@/lib/queries'
 import { notFound } from 'next/navigation'
-import { StageBadge } from '@/components/stage-badge'
+import StageBadge from '@/components/stage-badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { StageProgress } from '@/components/stage-progress'
 import { PropertyNotes } from '@/components/property-notes'

@@ -1,86 +1,168 @@
 'use client'
 
+import Link from 'next/link'
 import { Property } from '@/lib/types'
 import { formatCurrency, formatDate, saleDateUrgency, formatPropertyDetails } from '@/lib/utils'
-import { StageBadge } from './stage-badge'
+import { MapPin, Bed, Bath, Square, Calendar, ArrowRight } from 'lucide-react'
 import { saveToPipeline } from '@/actions/pipeline'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useTransition, useState } from 'react'
 import clsx from 'clsx'
 
-export function PropertyCard({ property, isSavedInitial }: { property: Property, isSavedInitial: boolean }) {
+interface PropertyCardProps {
+  property: Property
+  isSavedInitial: boolean
+}
+
+export function PropertyCard({ property, isSavedInitial }: PropertyCardProps) {
+  const [isPending, startTransition] = useTransition()
   const [isSaved, setIsSaved] = useState(isSavedInitial)
-  const [isSaving, setIsSaving] = useState(false)
-  const router = useRouter()
 
   const handleSave = async (e: React.MouseEvent) => {
+    e.preventDefault()
     e.stopPropagation()
-    if (isSaved || isSaving) return
-    setIsSaving(true)
+    if (isSaved) return
+    
     setIsSaved(true)
-    try {
-      await saveToPipeline(property.id)
-    } catch (err) {
-      setIsSaved(false)
-    } finally {
-      setIsSaving(false)
-    }
+    startTransition(async () => {
+      try {
+        await saveToPipeline(property.id)
+      } catch {
+        setIsSaved(false)
+      }
+    })
   }
 
   const urgency = saleDateUrgency(property.sale_date)
-  const dateColor = urgency === 'danger' ? 'text-danger' : urgency === 'warning' ? 'text-warning' : 'text-text-secondary'
+  const stageBadgeClass = clsx(
+    'inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-semibold',
+    property.stage === 'new_filing' && 'bg-indigo/10 text-indigo',
+    property.stage === 'sale_date_assigned' && 'bg-warning/10 text-warning-dark',
+    property.stage === 'upcoming' && 'bg-danger/10 text-danger',
+    (!property.stage || property.stage === 'sold' || property.stage === 'redeemed') && 'bg-ink-100 text-ink-500'
+  )
+
+  const stageLabels: Record<string, string> = {
+    'new_filing': 'New Filing',
+    'sale_date_assigned': 'Sale Date Set',
+    'upcoming': 'Auction Soon',
+    'sold': 'Sold',
+    'redeemed': 'Redeemed',
+    'canceled': 'Canceled',
+  }
+  const stageLabel = stageLabels[property.stage || ''] || property.stage?.replace(/_/g, ' ') || 'Unknown'
 
   return (
-    <div 
-      onClick={() => router.push(`/property/${property.id}`)}
-      className="bg-surface border border-border rounded p-5 hover:border-surface-elevated transition-colors cursor-pointer flex flex-col gap-4"
-    >
-      <div className="flex justify-between items-start gap-4">
-        <div className="flex flex-col gap-1 w-full">
-          <div className="mb-1">
-            <StageBadge stage={property.stage} />
+    <Link href={`/property/${property.id}`} className="block group">
+      <article className="zen-card-interactive h-full flex flex-col">
+        {/* Header with stage badge */}
+        <div className="p-5 border-b border-border">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <span className={stageBadgeClass}>
+              <span className={clsx(
+                'w-1.5 h-1.5 rounded-full',
+                urgency === 'danger' ? 'bg-danger animate-pulse-soft' : 
+                urgency === 'warning' ? 'bg-warning' : 'bg-current'
+              )} />
+              {stageLabel}
+            </span>
+            <span className="font-mono text-xs text-ink-400 bg-rice-100 px-2 py-1 rounded">
+              {property.case_number}
+            </span>
           </div>
-          <h3 className="font-body font-semibold text-[15px] text-text-primary line-clamp-1">{property.address}</h3>
-          <p className="text-[13px] text-text-secondary line-clamp-1">{property.city}, {property.state} {property.zip_code}</p>
+          
+          <h3 className="font-display font-semibold text-lg text-foreground leading-snug group-hover:text-accent transition-colors">
+            {property.address}
+          </h3>
+          <p className="flex items-center gap-1.5 text-sm text-ink-500 mt-1">
+            <MapPin className="w-3.5 h-3.5" />
+            {property.city}, {property.state} {property.zip_code}
+          </p>
         </div>
-      </div>
 
-      <div className="font-data text-[14px] text-text-secondary">
-        {formatPropertyDetails(property.bedrooms, property.bathrooms, property.sqft)}
-      </div>
+        {/* Property details */}
+        <div className="p-5 flex-1 space-y-3">
+          {property.bedrooms || property.bathrooms || property.sqft ? (
+            <div className="flex items-center gap-4 text-xs text-ink-500">
+              {property.bedrooms && (
+                <span className="flex items-center gap-1">
+                  <Bed className="w-3.5 h-3.5" />
+                  {property.bedrooms} bd
+                </span>
+              )}
+              {property.bathrooms && (
+                <span className="flex items-center gap-1">
+                  <Bath className="w-3.5 h-3.5" />
+                  {property.bathrooms} ba
+                </span>
+              )}
+              {property.sqft && (
+                <span className="flex items-center gap-1">
+                  <Square className="w-3.5 h-3.5" />
+                  {property.sqft.toLocaleString()} sqft
+                </span>
+              )}
+            </div>
+          ) : null}
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <div className="text-[11px] text-text-muted uppercase tracking-[0.05em] font-medium mb-1">County Appraisal</div>
-          <div className="font-data text-[14px] text-text-primary">{formatCurrency(property.county_appraisal)}</div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-ink-500">Appraisal</span>
+              <span className="font-mono font-semibold text-foreground">
+                {formatCurrency(property.county_appraisal)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-ink-500">Foreclosure</span>
+              <span className="font-mono font-semibold text-foreground">
+                {formatCurrency(property.foreclosure_amount)}
+              </span>
+            </div>
+            {property.sale_date && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-ink-500 flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5" />
+                  Sale Date
+                </span>
+                <span className={clsx(
+                  'font-mono font-semibold',
+                  urgency === 'danger' ? 'text-danger' : 
+                  urgency === 'warning' ? 'text-warning-dark' : 'text-foreground'
+                )}>
+                  {formatDate(property.sale_date)}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-        <div>
-          <div className="text-[11px] text-text-muted uppercase tracking-[0.05em] font-medium mb-1">Foreclosure Amt</div>
-          <div className="font-data text-[14px] text-text-primary">{formatCurrency(property.foreclosure_amount)}</div>
-        </div>
-      </div>
 
-      {property.sale_date && (
-        <div className={clsx("font-data text-[13px]", dateColor)}>
-          Sale: {formatDate(property.sale_date)}
+        {/* Action button */}
+        <div className="p-5 pt-0">
+          <button
+            onClick={handleSave}
+            disabled={isSaved || isPending}
+            className={clsx(
+              'w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all',
+              isSaved
+                ? 'bg-success/10 text-success cursor-default'
+                : 'bg-rice-100 text-ink-700 hover:bg-accent hover:text-white'
+            )}
+          >
+            {isSaved ? (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                In Pipeline
+              </>
+            ) : (
+              <>
+                Add to Pipeline
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
         </div>
-      )}
-
-      <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
-        <span className="font-data text-[12px] text-text-muted">{property.case_number}</span>
-        <button 
-          onClick={handleSave}
-          disabled={isSaved || isSaving}
-          className={clsx(
-            "text-[14px] font-semibold px-4 py-2 rounded transition-colors",
-            isSaved 
-              ? "text-text-secondary bg-transparent cursor-default" 
-              : "border border-border text-text-secondary hover:border-text-secondary"
-          )}
-        >
-          {isSaved ? "In Pipeline ✓" : "Save to Pipeline"}
-        </button>
-      </div>
-    </div>
+      </article>
+    </Link>
   )
 }

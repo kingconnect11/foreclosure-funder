@@ -1,4 +1,9 @@
 import { getUserPipeline, getCurrentUser } from '@/lib/queries'
+import { KanbanBoard } from '@/components/kanban-board'
+import { StatCard } from '@/components/stat-card'
+import { LayoutList } from 'lucide-react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export default async function PipelinePage() {
   const user = await getCurrentUser()
@@ -6,7 +11,6 @@ export default async function PipelinePage() {
 
   const pipeline = await getUserPipeline(user.id)
 
-  // Group by stage for kanban layout
   const stages = pipeline.reduce(
     (acc, entry) => {
       const stage = entry.stage ?? 'watching'
@@ -19,35 +23,45 @@ export default async function PipelinePage() {
 
   const totalCount = pipeline.length
   const watchingCount = stages['watching']?.length ?? 0
-  const activeStages = ['researching', 'site_visit', 'preparing_offer', 'offer_submitted', 'counter_offered', 'offer_accepted', 'in_closing']
+  const activeStagesList = ['researching', 'site_visit', 'preparing_offer', 'offer_submitted', 'counter_offered', 'offer_accepted', 'in_closing']
   const activeCount = pipeline.filter((e) =>
-    activeStages.includes(e.stage ?? '')
+    activeStagesList.includes(e.stage ?? '')
   ).length
   const closedCount = stages['closed']?.length ?? 0
   const passedCount = (stages['passed']?.length ?? 0) + (stages['rejected']?.length ?? 0) + (stages['no_response']?.length ?? 0)
 
-  // Frontend teams: replace this JSON dump with kanban board
-  // Data available: pipeline, stages, stats (totalCount, watchingCount, activeCount, closedCount, passedCount), user
   return (
-    <div style={{ padding: 24, fontFamily: 'monospace' }}>
-      <h1>Pipeline (skeleton)</h1>
-      <h2>Summary</h2>
-      <pre>
-        {JSON.stringify(
-          { totalCount, watchingCount, activeCount, closedCount, passedCount },
-          null,
-          2
-        )}
-      </pre>
-      <h2>Stages</h2>
-      {Object.entries(stages).map(([stage, entries]) => (
-        <div key={stage}>
-          <h3>
-            {stage} ({entries.length})
-          </h3>
-          <pre>{JSON.stringify(entries.slice(0, 2), null, 2)}</pre>
+    <div className="space-y-8 animate-in fade-in duration-500 flex flex-col h-full">
+      <div>
+        <h1 className="font-serif text-3xl font-bold text-foreground mb-6">Pipeline</h1>
+        
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <StatCard label="Total Saved" value={totalCount} />
+          <StatCard label="Watching" value={watchingCount} />
+          <StatCard label="Active Deals" value={activeCount} />
+          <StatCard label="Closed" value={closedCount} />
+          <StatCard label="Passed/Rejected" value={passedCount} />
         </div>
-      ))}
+      </div>
+
+      {totalCount === 0 ? (
+        <div className="flex-1 rounded-sharp border border-dashed border-border bg-surface-1/50 flex flex-col items-center justify-center p-12 text-center min-h-[400px]">
+          <div className="h-16 w-16 rounded-full bg-surface-2 flex items-center justify-center mb-6">
+            <LayoutList className="h-8 w-8 text-muted" />
+          </div>
+          <h2 className="font-serif text-2xl font-semibold mb-2">Your pipeline is empty</h2>
+          <p className="text-muted max-w-md mb-8">
+            Browse the dashboard to find properties and save them to your pipeline to start tracking your deals.
+          </p>
+          <Button asChild size="lg">
+            <Link href="/dashboard">Browse Properties</Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="flex-1 min-h-0">
+          <KanbanBoard stages={stages} />
+        </div>
+      )}
     </div>
   )
 }

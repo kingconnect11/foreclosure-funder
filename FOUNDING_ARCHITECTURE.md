@@ -303,6 +303,8 @@ Both products share:
 3. **The scraper writes to Supabase first**, then a sync function pushes relevant data to Google Sheets.
 4. **The recommendation engine runs server-side** (Supabase Edge Function or Next.js API route) and returns scored results per investor.
 5. **iOS app is a Capacitor.js wrapper** around the Next.js web app for v1. Rebuild in React Native if/when justified by user volume.
+6. **Component libraries allowed with heavy customization.** shadcn/ui and Radix UI primitives are permitted, but must be rethemed beyond recognition. Full opinionated kits (Material UI, Chakra UI, Ant Design) remain banned — they produce homogeneous output.
+7. **Google Maps uses address-based embeds.** Maps Embed API and Street View Static API both accept raw street addresses — no geocoding or latitude/longitude columns needed on the properties table.
 
 ---
 
@@ -424,6 +426,17 @@ investor_pipeline
   created_at
   updated_at
 
+-- PIPELINE STAGE HISTORY (per-stage notes and timestamps)
+pipeline_stage_history
+  id (uuid)
+  pipeline_id (uuid, FK → investor_pipeline, ON DELETE CASCADE)
+  stage (pipeline_stage enum)
+  notes (text, nullable)
+  entered_at (timestamptz, default now())
+  exited_at (timestamptz, nullable)
+  -- Indexes: pipeline_id, stage
+  -- RLS: investors read/write own; admins read deal room
+
 -- RECOMMENDATION SCORES (computed)
 recommendation_scores
   id (uuid)
@@ -468,7 +481,7 @@ outreach_campaigns
 
 1. **Email + Password** (primary)
 2. **Sign in with Apple** (required for iOS App Store if offering any social login)
-3. **Google Sign-In** (optional convenience)
+3. **Google Sign-In** (required after Apple)
 
 ### User Lifecycle
 
@@ -501,7 +514,7 @@ outreach_campaigns
 7. **Storage:** Preferences stored in `investor_preferences` table; raw transcript stored in Supabase Storage
 8. **Activation:** Recommendation engine begins scoring properties for this investor
 
-### Standardized Interview Questions (Draft)
+### Standardized Interview Questions (Draft, needs improvement and validation from Philip & Mike)
 
 **Exact-response questions:**
 - What is your typical transaction size? (budget range)
@@ -509,10 +522,10 @@ outreach_campaigns
 - What counties/zip codes are you interested in? (location)
 - Do you work in residential only, or also commercial? (property types)
 - Do you have existing contractor relationships? (readiness indicator)
-- Do you have an existing lender for larger transactions? (financing detail)
+- Do you have an existing lender for larger transactions? (financing detail) optional
 
 **Open-ended questions:**
-- If you could describe your ideal property — something that would really excite you — what would that look like? (dream property description)
+- If you could describe your ideal investment property — something that would really excite you, what would that look like? (dream property description)
 - What's the most annoying part of researching a potential investment? (pain points)
 - What's your biggest fear when purchasing a foreclosure? (risk tolerance indicator)
 - Walk me through your last investment — what went right and what went wrong? (experience level)
@@ -534,10 +547,12 @@ outreach_campaigns
 
 ### Evolution
 
-- **Phase 1 (now):** Philip + Mike conduct calls manually
-- **Phase 2:** Trained sales rep or customer service rep conducts calls
+> **Note (March 3, 2026):** This process will evolve rapidly. The form-based approach below is the starting point, but expect the flow, questions, and structure to change significantly as we learn from the first 10–20 investor onboardings. Treat every call as a chance to refine.
+
+- **Phase 1 (now — alpha):** Philip conducts Zoom calls with investors and fills out the self-service onboarding form on their behalf during the call. The form writes directly to `investor_preferences`. This is NOT a future feature — it ships with alpha launch. No separate Zoom transcript processing pipeline needed yet. This should be built into the Super Admin Panel when that is built, for now work with Philip to come up with the best way to implement for alpha launch. Form should be fillable by any admin for alpha.
+- **Phase 2:** Trained sales rep or customer service rep conducts calls using the same form
 - **Phase 3:** AI voice agent conducts initial screening, human follows up
-- **Phase 4:** Self-service onboarding questionnaire + optional call
+- **Phase 4:** Fully self-service onboarding questionnaire (investor fills it out themselves) + optional call
 
 ---
 
@@ -572,9 +587,11 @@ outreach_campaigns
 
 ## 12. THE RECOMMENDATION ENGINE
 
+> **Note (March 3, 2026):** The recommendation engine is one of Foreclosure Funder's top 3–4 most compelling reasons for an investor to pay for this product. The personalized scoring and the data it generates about investor behavior will be extremely valuable — both for serving investors better and for understanding our market. This section describes the initial framework, but the final design will require dedicated ideation sessions before implementation. Do not treat the 7 factors below as final — the real engine will likely have significantly more factors and will integrate with the note-to-tag system (see below).
+
 ### How Scoring Works
 
-Each property receives a score (0-100) for each investor, based on weighted factors:
+Each property receives a score (0-100) for each investor, based on weighted factors. **The table below is a starting framework, not a final design:**
 
 | Factor | Weight | Source |
 |--------|--------|--------|
@@ -585,6 +602,8 @@ Each property receives a score (0-100) for each investor, based on weighted fact
 | Risk alignment | 10% | Title health + lien complexity vs. risk tolerance |
 | Feature match | 10% | Pool, basement, etc. vs. desired features |
 | Deal-breaker check | 5% | Binary: any deal-breaker present = score to 0 |
+
+**Planned additions:** Additional factors will emerge from investor feedback, the note-to-tag system, and behavioral signals (what properties investors save, skip, and spend time on). Tags extracted from investor notes on properties will feed directly into scoring as additional preference signals.
 
 ### Output
 
@@ -611,7 +630,7 @@ Each recommendation includes:
 **Method:** Download PDF → Claude API (Sonnet) for visual extraction → structured JSON
 **Output:** Case number, plaintiff, defendant, address, city, zip, sale date, notice type, foreclosure amount, attorney
 **Schedule:** Wednesday 9am
-**Destination:** Supabase `properties` table (with sync to Google Sheets)
+**Destination:** Currently Google Sheets only. Supabase `properties` table integration is Phase 2b (not yet complete). Target: Supabase primary, Google Sheets sync secondary.
 
 ### Source 2: Sedgwick County Appraiser (Per Property)
 
@@ -633,11 +652,11 @@ Each recommendation includes:
 **Method:** Mike logs into RPR (Realtor's Property Resource), looks up value, enters in admin panel
 **Future:** No public API available at Mike's NAR membership tier. Explore API access at higher tiers.
 
-### Source 5: Visual Data (Future)
+### Source 5: Visual Data
 
-**Planned:** Google Maps / Street View / satellite imagery per property
+**Google Maps:** Available now (optional) via address-based embeds. Maps Embed API and Street View Static API both accept raw street addresses — no geocoding or lat/lng columns needed. Can be added to property cards and detail pages.
 **Planned:** Nearby comparable sales (sold prices, rent prices, condition)
-**Phase:** 3+
+**Phase:** Maps available now; comps data Phase 3+
 
 ### Source 6: Expired/Withdrawn MLS Listings (Future)
 
@@ -745,25 +764,32 @@ The `markets` table with `scraper_config` JSON allows each market to have its ow
 | Weekly Investor Email Script | Built, not installed | Google Apps Script (in handoff docs) |
 | Vercel Project | Created, not deployed | foreclosure-dashboard/.vercel/ |
 
-### What Needs to Happen Before Beta Launch
+### What's Been Completed (as of March 3, 2026)
 
-1. Set up Supabase project (database, auth, RLS)
-2. Migrate data model from Google Sheets to Supabase
-3. Rebuild dashboard API to read from Supabase instead of Sheets CSV
-4. Implement auth (sign up, sign in, role-based access)
-5. Build investor preference system and pipeline CRM
-6. Deploy to Vercel with new domain
-7. Set up Capacitor.js for iOS
-8. Security audit
-9. Terms of Service / Privacy Policy
+1. ~~Set up Supabase project (database, auth, RLS)~~ — **Done.** 9 tables, 35 RLS policies, role hierarchy.
+2. ~~Migrate data model from Google Sheets to Supabase~~ — **Done.** 81 properties seeded, 8 profiles, 1 market, 1 deal room.
+3. ~~Rebuild dashboard API to read from Supabase~~ — **Done.** 14 query functions in `lib/queries.ts`.
+4. ~~Implement auth~~ — **Done.** Email/password via Supabase SSR, middleware protecting routes.
+5. ~~Build pipeline CRM~~ — **Done.** Server actions for save, stage change, notes, admin notes.
+6. ~~Deploy to Vercel~~ — **Done.** Connected project.
+7. Pagination bug fixed (page 0→1 in dashboard). Suspense boundary added for FilterBar.
+8. `pipeline_stage_history` table added for per-stage notes tracking.
+9. `PipelineStageHistory` type added to `lib/types.ts`.
+
+### What's Next (Alpha Launch — End of This Week)
+
+1. 10 perfect sample properties with all fields populated (dedicated Claude Code session)
+2. Frontend bakeoff Round 2 (competing AI agents, revised prompts)
+3. Onboarding form mapping to `investor_preferences` table
+4. Scraper Supabase integration (Phase 2b, 1-2 weeks)
+5. Court research automation (Phase 2b)
 
 ### Technical Debt
 
-- Dashboard has 2 em-dash instances (page.js lines 146, 228) — Mike prefers hyphens
-- Sheet ID inconsistency in documentation (33 chars vs 44 chars)
 - No automated tests
 - No CI/CD pipeline
-- CSS is all in globals.css (no component-level styling system)
+- Scraper writes to Google Sheets only (Supabase integration pending)
+- No error boundaries in frontend (bakeoff agents should add these)
 
 ---
 
@@ -808,6 +834,18 @@ The `markets` table with `scraper_config` JSON allows each market to have its ow
 - $200-1000/month budget range
 - Self-service onboarding questionnaire (future phase)
 
+### New From March 3, 2026 Planning Session
+
+- All prescriptive design direction stripped from bakeoff/frontend prompts (agents get full creative freedom)
+- shadcn/ui and Radix UI allowed with heavy customization
+- Address-based Google Maps embeds (no geocoding, no lat/lng columns)
+- `pipeline_stage_history` table added for per-stage notes and timestamps
+- Onboarding form pulled from Phase 4 to Phase 1 (alpha launch requirement) — Philip fills it out during Zoom calls
+- Note-to-tag system planned: investor notes → extracted tags → recommendation engine training
+- Recommendation engine scope expanded beyond 7 factors, requires dedicated ideation sessions
+- Referral code system added to Phase 4
+- Timeline recalibrated from weeks to days (AI agents + unlimited Cursor credits = much faster than solo dev)
+
 ---
 
 ## 19. DEVELOPMENT PHASES & ROADMAP
@@ -816,82 +854,93 @@ The `markets` table with `scraper_config` JSON allows each market to have its ow
 
 This roadmap assumes a single developer with full access to AI coding tools (Claude Code, Cursor, multi-agent workflows). With concurrent AI agents handling boilerplate, schema generation, component scaffolding, and test writing, the bottleneck is decision-making and user feedback loops, not code output. Timelines below reflect that reality as of March 2026.
 
-### Phase 0: Foundation (Week 1)
-*Goal: Get the backend right before building more frontend*
+### Phase 0: Foundation — COMPLETE
+*Backend, auth, schema, RLS, data seeding — all done.*
 
-- [ ] Create Supabase project
-- [ ] Design and implement database schema (all tables above)
-- [ ] Set up Supabase Auth (email/password)
-- [ ] Implement Row-Level Security policies
-- [ ] Write migration script: Google Sheets data → Supabase
-- [ ] Set up bidirectional sync: Supabase ↔ Google Sheets (for Mike)
-- [ ] Update scraper to write to Supabase (primary) and Sheets (secondary)
-- [ ] Register foreclosurefunder.com domain
-- [ ] Add PWA manifest + service worker to Next.js app
+- [x] Supabase project created, schema implemented (9 tables)
+- [x] Supabase Auth (email/password), RLS (35 policies)
+- [x] Migration from Google Sheets to Supabase (81 properties, 8 profiles)
+- [x] Dashboard API reads from Supabase (14 query functions)
+- [x] Deployed to Vercel
+- [x] Pagination and search bugs fixed
+- [x] `pipeline_stage_history` table added
 
-### Phase 1: Beta Dashboard (Weeks 2-3)
-*Goal: Working dashboard for Mike's 6 investors*
+### Phase 1: Alpha Launch (This Week — March 3-7, 2026)
+*Goal: Working product for Mike + 1-2 investors*
 
-- [ ] Rebuild dashboard API to read from Supabase
-- [ ] Implement auth flow (sign up, sign in, protected routes)
-- [ ] Build investor preference input form (manual, pre-interview)
-- [ ] Build basic CRM pipeline UI (save, stage changes, notes)
-- [ ] Build admin panel for Mike (see all investors, add notes)
-- [ ] Deploy to Vercel with custom domain
-- [ ] Install weekly email automation
-- [ ] Invite beta users, assign accounts
-- [ ] **Ship to beta users and start collecting feedback immediately**
+**1a — Bakeoff Prep (Day 1):**
+- [ ] 10 fully populated sample properties with court research, all fields, Kansas-specific data
+- [ ] Dedicated Claude Code session
 
-### Phase 2: Court Research (Weeks 4-5)
+**1b — Frontend Bakeoff Round 2 (Day 1-2):**
+- [ ] Run bakeoff with revised prompts (all design direction stripped except left sidebar + notifications)
+- [ ] CTO picks winner, winner polished by Claude Code
+
+**1c — Onboarding Form (Day 2-3):**
+- [ ] Self-service questionnaire mapping to `investor_preferences` table
+- [ ] All fields from this section's interview questions
+- [ ] Rotating placeholder suggestions in dream property free-text field
+- [ ] Save draft / progress capability
+- [ ] Philip uses this during manual Zoom onboarding calls
+
+**Alpha launch:** Mike King + 1-2 investors see the product by end of week.
+
+### Phase 2a: Pipeline Enhancements (Days 4-5)
+*Goal: Pipeline becomes genuinely useful*
+
+- [ ] `pipeline_stage_history` UI on property detail page
+- [ ] Note-to-tag system: extract tags from investor notes → display in admin → feed recommendation engine
+- [ ] Stage progression with notes prompt
+
+### Phase 2b: Court Research & Scraper Integration (1-2 weeks)
 *Goal: The killer feature that proves the business*
 
-- [ ] Build court case research automation (Kansas courts)
-- [ ] Integrate court research into property detail pages
-- [ ] Implement offer range estimation (lien analysis → estimated bank ask)
-- [ ] Title health badges (clean / clouded / complex)
-- [ ] Get Dan Drake's feedback specifically — this is the feature he described
-- [ ] Iterate based on feedback
+- [ ] Scraper writes to Supabase (currently Google Sheets only) — needs architect session
+- [ ] Court research automation for Kansas courts
+- [ ] Title health assessment (clean / clouded / complex)
+- [ ] Lien and judgment parsing
+- [ ] Property detail page integration
+- [ ] Get Dan Drake's feedback — this is the feature he described
+- [ ] Multiple sub-phases required; needs its own planning session
 
-### Phase 3: Recommendation Engine + Onboarding (Weeks 6-7)
+### Phase 3: Recommendation Engine (1-2 weeks, requires ideation first)
 *Goal: Personalization that makes the product indispensable*
 
-- [ ] Build recommendation scoring engine
-- [ ] Implement onboarding interview processing pipeline (n8n/make.com + Claude API)
-- [ ] Build preference extraction from transcripts
-- [ ] Property detail pages with recommendation scores and explanations
-- [ ] "X others watching" anonymous indicator
-- [ ] Enhanced property cards (lien badges, title status, offer ranges)
+> **Requires dedicated ideation sessions before coding.** This is not a single Claude Code task. The engine needs brainstorming on factors beyond the initial 7, integration with the tag system, investor feedback loops, and iterative design.
+
+- [ ] Expand scoring beyond 7 weighted factors
+- [ ] Integrate tag system from Phase 2a
+- [ ] Investor preference matching with explanation generation
+- [ ] Property detail pages with recommendation scores
+- [ ] "X others watching" anonymous indicator (already partially built)
 - [ ] Alerts: new properties matching preferences
 
-### Phase 4: Monetization + Deal Room (Weeks 8-10)
-*Goal: Start charging, launch second product line*
+### Phase 4: Growth Features
+*Goal: Start charging, referral growth, second product line*
 
-- [ ] Set up Stripe account and subscription model
+- [ ] Referral code system (easy one-time codes for investors to share)
 - [ ] Stripe subscription integration + free tier paywall
-- [ ] Build Deal Room setup flow
-- [ ] White-label branding for agents
-- [ ] Investor management panel for agents
-- [ ] Group visibility settings with consent
+- [ ] Deal Room setup flow + white-label branding
 - [ ] Marketing site / landing page
 - [ ] Form Delaware LLC
 - [ ] First paying customers
-- [ ] Hire developer consultant for security audit before going fully public
+- [ ] Security audit by hired consultant
 
-### Phase 5: Mobile App + Expansion (Weeks 11-14)
+### Phase 5: Mobile App + Expansion
 *Goal: App Store presence, second market*
 
-- [ ] Build React Native app with Expo (3-4 weeks)
+- [ ] Build React Native app with Expo
 - [ ] Push notifications, biometric auth, camera, GPS
 - [ ] Sign in with Apple implementation
 - [ ] Submit to Apple App Store + Google Play
 - [ ] Second market: Butler County, KS
 - [ ] Expired/withdrawn MLS listing pipeline (for financed investors)
 
-### Phase 6: Premium Features + Growth (Weeks 15-20)
+### Phase 6: Premium Features + Growth
 *Goal: Premium tier value, market expansion*
 
 - [ ] AI voice agent for cold-calling property owners
-- [ ] Visual data (maps, street view, comps)
+- [ ] Comparable sales data
 - [ ] Document preparation services
 - [ ] Kansas City market research and prep
 - [ ] Additional Kansas county expansion
@@ -1316,6 +1365,10 @@ Consider that our initial users are in Kansas, which generally has lower willing
 11. **Fair Housing compliance:** Need legal review of recommendation engine to ensure it doesn't discriminate
 12. **Security audit budget:** How much to allocate for the pre-launch security consultant?
 13. **Beta user agreement:** Do we need beta users to sign anything (NDA, feedback agreement, ToS)?
+14. **Note-to-tag extraction method:** How should tags be extracted from investor notes? Options: NLP/keyword extraction, manual tagging by admin, AI classification via Claude API, or hybrid approach.
+15. **Recommendation engine factors:** What additional factors beyond the initial 7 should the engine consider? Behavioral signals (save/skip patterns, time-on-page)? Tag-based preferences? Market trends?
+16. **Scraper architecture:** Needs its own architect session to plan Supabase integration, scheduling mechanism, error handling, retry logic, and court research automation pipeline.
+17. **Referral code mechanics:** One-time use? Multi-use? What does the referrer get? What does the new user get? Tracking and attribution.
 
 ---
 

@@ -7,6 +7,7 @@ import type {
   DealRoom,
   PropertyStage,
   PipelineStage,
+  PipelineStageHistory,
 } from '@/lib/types'
 
 // ---------------------------------------------------------------------------
@@ -325,6 +326,21 @@ export async function getInvestorPipelineSummary(
     summary[stage] = (summary[stage] ?? 0) + 1
   }
   return summary
+}
+
+// ---------------------------------------------------------------------------
+// Pipeline Stage History
+// ---------------------------------------------------------------------------
+
+export async function getStageHistory(pipelineId: string): Promise<PipelineStageHistory[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('pipeline_stage_history')
+    .select('*')
+    .eq('pipeline_id', pipelineId)
+    .order('entered_at', { ascending: true })
+  if (error) throw error
+  return data ?? []
 }
 
 // ---------------------------------------------------------------------------

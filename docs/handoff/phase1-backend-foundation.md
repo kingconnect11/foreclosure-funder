@@ -4,7 +4,7 @@
 **Issued by:** Philip King, CTO
 **Purpose:** This document tells you everything you need to know to build the visual UI on top of the backend foundation. The data layer, auth, middleware, queries, mutations, and route skeletons are all done. Your job is to replace the JSON dumps with production-quality UI components.
 
-**Full design spec:** `FRONTEND_BRIEF_2026-03-02.md` (in the repo root) -- that is the definitive spec for what to build. This doc covers what already exists in code and how to use it.
+**Functional spec:** `FUNCTIONAL_SPEC.md` (in the repo root) — defines what to build. **Design brief:** `BAKEOFF_PROMPT.md` — defines the creative direction (your choice). This doc covers what already exists in code and how to use it.
 
 ---
 
@@ -65,7 +65,7 @@ Push to `main` (or create a PR) and Vercel deploys automatically.
 | Classnames | `clsx` |
 | Deployment | Vercel |
 
-You are free to install additional packages that serve the design (animation libraries, icon sets, charting, etc.). The only hard rule: no full UI kits (Material UI, Chakra, Ant Design). See `FRONTEND_BRIEF_2026-03-02.md` Section 2 for full details.
+Do not add other packages without approval. See `FRONTEND_BRIEF_2026-03-02.md` section 2 for the rationale.
 
 ---
 
@@ -384,17 +384,17 @@ All actions are in `actions/*.ts`. They use the `'use server'` directive and aut
 
 Replace every skeleton page and build these components. Each task maps to a Stream B deliverable from the implementation plan.
 
-### B1: Tailwind Design System Config
+### B1: Design System + Tailwind Config
 
-Extend `tailwind.config.ts` with YOUR color palette, typography, and spacing system. You have full creative control — see `FRONTEND_BRIEF_2026-03-02.md` Section 3 for what's open and what's fixed. Only requirement: dark-mode default and distinguishable status colors.
+Create your own design system. Choose your color palette, typography, and spacing. Extend `tailwind.config.ts` with your choices. Only requirement: dark-mode default, financial data in monospace/tabular font.
 
 ### B2: Fonts + Root Layout
 
-Update `app/layout.tsx` to load your chosen fonts. Set a dark background on `<body>`. Financial data (prices, case numbers, dates) must use a monospace or tabular-figure font. Display and body fonts are your choice.
+Update `app/layout.tsx` to load your chosen fonts via Google Fonts. Set your dark background on `<body>`.
 
 ### B3: Navigation Component
 
-Create `components/nav.tsx`. Must include: "Foreclosure Funder" branding, links (Dashboard, Pipeline, Admin for admin+ only), user email + sign out. Mobile: responsive navigation. Design pattern (top nav, side nav, etc.) is your call.
+Create `components/nav.tsx`. Must include: "Foreclosure Funder" branding, links (Dashboard, Pipeline, Admin for admin+ only), user email, sign out. Mobile responsive. Design pattern is your choice.
 
 Wire it into `app/(main)/layout.tsx` -- the layout already fetches `getCurrentUser()` and passes it down.
 
@@ -449,24 +449,28 @@ Role gating is already implemented (redirects investors to `/dashboard`).
 
 ## 6. Design Direction
 
-**IMPORTANT:** The visual design is YOUR creative decision. Read `FRONTEND_BRIEF_2026-03-02.md` Section 3 carefully — it gives you full creative control over colors, typography, layout, animation, and component styling. The only hard requirements are: dark-mode default, financial data in a monospace/tabular font, responsive to 375px, and no full UI kits (Material UI, Chakra, Ant Design).
+**The visual design is YOUR creative decision.** Choose your own colors, typography, layout, animation, and component styling. The only hard requirements:
 
-Choose your own aesthetic. Make it visually stunning. This is a design competition — the version that looks the most professional and distinctive wins. The v0 prototype used deep navy + amber + Playfair Display — you can keep that direction, riff on it, or go somewhere completely different.
+- Dark-mode default
+- Financial data in a monospace or tabular-figure font
+- Stage badges visually distinguishable by urgency
+- Responsive down to 375px
+- No full UI kits (Material UI, Chakra, Ant Design, shadcn/ui)
 
-See `FRONTEND_BRIEF_2026-03-02.md` Section 3 for the full creative brief, including what you can freely choose and what is functionally fixed.
+See `BAKEOFF_PROMPT.md` for the full creative brief.
 
 ---
 
 ## 7. Acceptance Criteria
 
-### Functional (pass/fail — all must work)
+### Functional (pass/fail)
 
 1. An unauthenticated user is redirected to `/login` from any route.
 2. A user can sign up, sign in, and sign out.
 3. The dashboard loads properties from Supabase and displays them correctly.
 4. Filters (stage, city, sort, search) work and persist in URL params.
 5. Clicking "Save to Pipeline" creates a pipeline entry with stage `watching`.
-6. The property detail page shows all data fields specified in the brief Section 6.
+6. The property detail page shows all data fields from the functional spec.
 7. Notes save on the property detail page (debounced auto-save).
 8. The pipeline page organizes properties by stage.
 9. The admin panel shows the investor table and activity feed (visible only to admin+ roles).
@@ -476,13 +480,12 @@ See `FRONTEND_BRIEF_2026-03-02.md` Section 3 for the full creative brief, includ
 
 ### Design (judged by the CTO — this is the competition)
 
-13. Does the overall aesthetic feel professional, distinctive, and visually compelling?
-14. Is the typography system intentional and well-executed?
-15. Does the data hierarchy work — can you scan a property card and get the key info in 2 seconds?
-16. Are the interactions polished — hover states, transitions, loading states?
-17. Does it feel like a product someone would pay for, or a template someone downloaded?
-18. Would an investor show this to a friend and say "look at this tool I'm using"?
-19. Does it have at least one moment of genuine visual delight?
+13. Does it look like a real product or a template?
+14. Could you tell it apart from other versions in a lineup?
+15. Is the typography intentional with clear hierarchy?
+16. Are interactions polished — hover states, transitions, loading states?
+17. Would an investor show this to a friend?
+18. Is there at least one moment of genuine visual delight?
 
 ---
 
@@ -706,4 +709,4 @@ For "Save to Pipeline" and stage changes, update the UI immediately and revert i
 
 ---
 
-*Build to the spec in `FRONTEND_BRIEF_2026-03-02.md`. This handoff doc tells you what code exists. The brief tells you what it should look like. Good luck.*
+*Build to the functional spec in `FUNCTIONAL_SPEC.md`. This handoff doc tells you what code exists. The design is yours — see `BAKEOFF_PROMPT.md`. Good luck.*

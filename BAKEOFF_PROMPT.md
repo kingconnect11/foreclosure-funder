@@ -1,80 +1,159 @@
-# Bake-Off Prompt — Copy This Into Each Agent
+# Design Competition — Foreclosure Funder
 
-**Instructions:** Paste this entire prompt into each competing agent (Claude, Gemini, Cursor, etc.). Each agent gets its own copy of the project folder. Do NOT modify the prompt between agents — the whole point is identical instructions, different creative execution.
+**Revised:** March 3, 2026
+**Approved by:** Philip King, CTO
+
+Paste this entire prompt into the competing agent. Each agent gets its own copy of the project folder.
 
 ---
 
-## THE PROMPT
+## YOUR ASSIGNMENT
 
-You are building the frontend for **Foreclosure Funder**, a SaaS dashboard for real estate investors who purchase foreclosure properties. This is a design competition — multiple AI agents are building competing versions. The winner will be selected by the CTO based on visual impact, UX quality, and overall craft.
+You are entering a design competition. Multiple AI agents are building competing frontends for the same product. The CTO will pick the winner based on visual impact, UX craft, and functional completeness. The functional requirements are locked — everyone builds the same features. **The design is entirely yours.**
 
-### What already exists
+### The product
 
-The backend is complete. The project is a Next.js 14+ app with TypeScript, Tailwind CSS, and Supabase. All database queries, server actions, auth middleware, and route skeletons are wired up. The skeleton pages currently output raw JSON. **Your job is to replace the JSON dumps with a production-quality, visually stunning UI.**
+**Foreclosure Funder** — a SaaS dashboard for real estate investors who buy foreclosure properties at county auction. Your users write $50K–$200K checks on distressed properties. Some are weathered contractors who've flipped 200 houses. Some are first-timers with ambition and a line of credit. The tool needs to feel like it was built by someone who understands serious money — not like a template, not like a hackathon project.
 
-### Files you MUST read before writing any code
+### What exists
 
-Read these files in this exact order. Do not skip any.
+The backend is fully built. The Next.js app has working auth, database queries, server actions, middleware, and route skeletons. The skeleton pages currently dump raw JSON. You are replacing that JSON with a complete, styled, interactive UI.
 
-1. **`FRONTEND_BRIEF_2026-03-02.md`** — The definitive design competition spec. Section 3 gives you full creative control over the visual design. Sections 5-8 define the functional requirements for each page. Section 13 has the acceptance criteria you'll be judged against. **This is the primary document. If anything conflicts between docs, this one wins.**
+### Files to read (in order)
 
-2. **`docs/handoff/phase1-backend-foundation.md`** — Technical handoff explaining every file that exists, every query function signature, every server action, and the TypeScript types. This tells you what code is already written and how to use it.
+1. **`FUNCTIONAL_SPEC.md`** — What the app does. Every page, every data field, every interaction. This is the contract. Build all of it.
+2. **`docs/handoff/phase1-backend-foundation.md`** — Technical reference. Every function signature, every TypeScript type, every file that already exists.
 
-3. **`FOUNDING_ARCHITECTURE.md`** — Full product context if you need to understand why things are designed a certain way. Sections 1-4 (company overview, product vision, personas, two-product architecture) are the most relevant. You don't need to read the whole thing, but it's there.
+Do NOT read `OLD FRONTEND BRIEF.md`.
 
-### What you are building
+---
 
-Replace the JSON skeleton pages with fully designed, functional UI:
+## TWO STRUCTURAL REQUIREMENTS
 
-- **`/login` and `/signup`** — Auth pages (forms already work, just add your design)
-- **`/dashboard`** — Stats bar, filter bar, property card grid, pagination
-- **`/property/[id]`** — Property detail with two-column layout, pipeline controls, notes
-- **`/pipeline`** — Kanban board of saved properties organized by stage
-- **`/admin`** — Investor table + activity feed (admin-only)
-- **Navigation** — Your choice of pattern (top nav, side nav, etc.)
-- **All shared components** — Cards, badges, buttons, stage indicators, filter controls
+These are the only two layout constraints. Everything else — colors, typography, density, mood, animation, component style — is entirely your decision.
 
-### Creative direction
+### 1. Left sidebar navigation
 
-You have **full creative control** over the visual design. Read Section 3 of `FRONTEND_BRIEF_2026-03-02.md` carefully. Key points:
+Use a persistent left sidebar — not a top nav bar. Think Mercury, Linear, Notion, Vercel. The sidebar contains:
 
-- **Choose your own colors, typography, layout, animation, and component styling.** The only fixed visual requirements: dark-mode default, financial data in a monospace/tabular font, responsive to 375px, no full UI kits (Material UI, Chakra, Ant Design).
-- **The audience** is real estate investors who write five- and six-figure checks. The interface needs to feel credible, serious, and professional — but NOT boring. Think craft, not decoration.
-- **You can install additional packages** — animation libraries (framer-motion, GSAP), icon sets, charting libraries, component primitives (radix-ui, headless-ui), mapping libraries — whatever serves the design.
-- **Font/color/size references in Sections 5-8** are examples from a previous iteration. Replace them with your design system. The DATA FIELDS are requirements. The STYLING is yours.
-- **Bonus features welcome** — command palette, data visualizations, micro-interactions, map views — if they make the product more compelling without adding backend features.
+- Product branding ("Foreclosure Funder" or a logomark you design)
+- Navigation links: Dashboard, Pipeline, Admin (admin-only)
+- User section at the bottom: user's name/email, sign out
 
-### How you'll be judged
+Collapse gracefully on mobile (hamburger or slide-out drawer). Main content fills the remaining viewport.
 
-**Functional (pass/fail):** All 12 items in Section 13 of the brief must work. Auth, data loading, filters, pipeline saves, notes, responsive layout, no errors.
+### 2. Notifications / activity area
 
-**Design (the competition):** These are judged by the CTO:
-- Does the overall aesthetic feel professional, distinctive, and visually compelling?
-- Is the typography system intentional and well-executed?
-- Does the data hierarchy work — can you scan a property card and get the key info in 2 seconds?
-- Are the interactions polished — hover states, transitions, loading states?
-- Does it feel like a product someone would pay for, or a template someone downloaded?
-- Would an investor show this to a friend and say "look at this tool I'm using"?
-- Does it have at least one moment of genuine visual delight?
+Somewhere in the layout (header bar, sidebar section, dedicated panel — your call on placement), include:
 
-### Technical constraints
+- A search capability for filtering properties by address or case number
+- A notification or activity indicator (e.g., upcoming auctions this week, recent pipeline activity)
+- A personalized welcome ("Welcome, [First Name]" or similar)
 
-- **Framework:** Next.js 14+ with App Router, TypeScript, Tailwind CSS — non-negotiable
-- **Auth:** `@supabase/ssr` — already wired up in middleware
-- **Data:** Server Components fetch data, Server Actions handle mutations — patterns are established in the skeleton
-- **State:** No Redux/Zustand. Server Components + URL params + local `useState` only
-- **Required packages:** `next`, `@supabase/supabase-js`, `@supabase/ssr`, `tailwindcss`, `date-fns`, `clsx`
+How you design and position these is up to you. They just need to exist and work.
 
-### Getting started
+---
+
+## WHAT IS YOURS TO DECIDE
+
+Everything not listed above. This means:
+
+- Light mode, dark mode, or both — your call
+- Color palette — literally anything
+- Typography — any fonts, any pairing
+- Spacing and density — dense data tables or airy cards or something else
+- Component style — build from scratch or customize a library beyond recognition
+- Animation and interaction — as much or as little as serves the product
+- Layout within pages — how you arrange property cards, stats, filters, detail panels
+- Visual personality — the thing that makes someone say "this looks like a real product"
+
+### The bar
+
+The CTO's feedback on Round 1 was: "I do not want a bunch of dark boring versions of this." The submissions looked too similar — same dark themes, same generic dashboard energy. **Be distinctive.** Take a risk. If you've seen it before in another AI-generated dashboard, try something else.
+
+### Component libraries
+
+You MAY use **shadcn/ui**, **Radix UI**, **Headless UI**, or build from scratch. If you use a library, customize it until it's unrecognizable as that library's default. The goal is a product that looks like it has its own identity.
+
+**Banned:** Material UI, Chakra UI, Ant Design (full opinionated kits that override everything).
+
+### Additional packages
+
+Install whatever serves the design: framer-motion, GSAP, lucide, phosphor, recharts, d3, chart.js, Google Maps Embed API (address-based, no geocoding), clsx, date-fns (already installed).
+
+---
+
+## FUNCTIONAL COMPLETENESS
+
+This is as important as design quality. Round 1 submissions had non-functional admin panels. That is unacceptable.
+
+### Every page must work
+
+- Dashboard: stats load, filters work, pagination works, "Save to Pipeline" works
+- Property detail: all data fields display, notes auto-save, stage changes work, court research section renders (even if empty)
+- Pipeline: kanban layout with real data organized by stage, cards link to property detail
+- Admin panel: investor table loads with real data, activity feed shows real pipeline events, admin notes save — **this must actually function, not just render a placeholder**
+- Auth: sign in, sign up, sign out all work correctly
+
+### Every page must have states
+
+- **Loading:** Skeleton screens matching the layout shape. Not spinners. Not blank screens.
+- **Empty:** Designed empty states with helpful messages. Not blank areas.
+- **Error:** Clear error messages with retry actions. Not console errors.
+
+### Interactive elements
+
+The CTO wants "more buttons, more things to click, and they need to work." Every interactive element you add should do something real — link to a page, trigger a server action, filter data, expand a panel. No decorative-only buttons.
+
+### Google Maps (optional, encouraged)
+
+Address-based embeds work without geocoding:
+- Maps Embed API: `https://www.google.com/maps/embed/v1/place?key=YOUR_KEY&q=ADDRESS+CITY+STATE+ZIP`
+- Street View Static API: `https://maps.googleapis.com/maps/api/streetview?size=400x200&location=ADDRESS+CITY+STATE+ZIP&key=YOUR_KEY`
+
+The `properties` table has full addresses. No latitude/longitude needed.
+
+---
+
+## HOW YOU'LL BE JUDGED
+
+### Functional (pass/fail)
+
+All 15 items in `FUNCTIONAL_SPEC.md` Section 12 must work. Auth, data loading, filters, pipeline saves, notes, responsive layout, loading states, empty states, error states. If the app is broken, it loses regardless of how it looks. **If the admin panel doesn't function, you are automatically disqualified.**
+
+### Design (the competition)
+
+1. **First impression.** Does it feel like a real product or a template?
+2. **Distinctiveness.** Would I recognize this in a lineup of 5 competing versions?
+3. **Layout quality.** Does the sidebar + content area feel cohesive and intentional?
+4. **Information density.** Can I scan a property card and get the key info in 2 seconds?
+5. **State handling.** Are loading, empty, and error states designed — not afterthoughts?
+6. **Interaction polish.** Hover states, transitions, active states — crafted or default?
+7. **Emotional response.** Would an investor show this to a friend?
+8. **Feature richness.** Are there interactive elements beyond the bare minimum that actually work?
+
+### Bonus features (encouraged)
+
+- Command palette (cmd+K)
+- Data visualizations (pipeline distribution, stage trends, appraisal scatter)
+- Micro-interactions and transitions
+- Keyboard navigation
+- Map thumbnails on property cards
+- Creative kanban pipeline approach
+- Anything that makes the product feel alive and useful
+
+Do NOT add new backend features, database queries, or server actions. Work with what exists.
+
+---
+
+## GETTING STARTED
 
 ```bash
 npm install
-# Copy .env.local.example to .env.local and fill in your Supabase credentials
+# Ensure .env.local has your Supabase credentials
 npm run dev
 ```
 
-Visit `http://localhost:3000`. You'll be redirected to `/login`. Sign up or use existing test credentials if provided. The dashboard will show raw JSON — that's what you're replacing.
+Visit `http://localhost:3000`. Read `FUNCTIONAL_SPEC.md` first. Then `docs/handoff/phase1-backend-foundation.md`. Then start building.
 
-### One last thing
-
-Don't play it safe. This is a competition. Make something I'd be proud to demo to investors. Make it visually stunning. Show me what you can do.
+Make it look like a product someone would pay for. Make it yours.

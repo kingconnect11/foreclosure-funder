@@ -2,6 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { Constants } from '@/lib/types'
+
+const VALID_PIPELINE_STAGES = Constants.public.Enums.pipeline_stage
 
 export async function saveToPipeline(propertyId: string) {
   const supabase = await createClient()
@@ -32,6 +35,21 @@ export async function changeStage(pipelineId: string, newStage: string, notes?: 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  // Validate stage against enum
+  if (!VALID_PIPELINE_STAGES.includes(newStage as any)) {
+    throw new Error('Invalid pipeline stage')
+  }
+
+  // Verify ownership before any writes — ensures user owns this pipeline entry
+  const { data: entry, error: lookupError } = await supabase
+    .from('investor_pipeline')
+    .select('id, property_id')
+    .eq('id', pipelineId)
+    .eq('investor_id', user.id)
+    .single()
+
+  if (lookupError || !entry) throw new Error('Pipeline entry not found')
+
   // Close the current stage history row (set exited_at)
   await supabase
     .from('pipeline_stage_history')
@@ -44,17 +62,17 @@ export async function changeStage(pipelineId: string, newStage: string, notes?: 
     .from('pipeline_stage_history')
     .insert({
       pipeline_id: pipelineId,
-      stage: newStage as any,
+      stage: newStage as typeof VALID_PIPELINE_STAGES[number],
       notes: notes ?? null,
     })
 
   if (historyError) throw historyError
 
-  // Update the pipeline entry stage (existing behavior)
+  // Update the pipeline entry stage
   const { error } = await supabase
     .from('investor_pipeline')
     .update({
-      stage: newStage as any,
+      stage: newStage as typeof VALID_PIPELINE_STAGES[number],
       stage_changed_at: new Date().toISOString()
     })
     .eq('id', pipelineId)
@@ -62,15 +80,8 @@ export async function changeStage(pipelineId: string, newStage: string, notes?: 
 
   if (error) throw error
 
-  // Get property_id to revalidate the property detail page
-  const { data: entry } = await supabase
-    .from('investor_pipeline')
-    .select('property_id')
-    .eq('id', pipelineId)
-    .single()
-
   revalidatePath('/pipeline')
-  if (entry?.property_id) {
+  if (entry.property_id) {
     revalidatePath(`/property/${entry.property_id}`)
   }
 }

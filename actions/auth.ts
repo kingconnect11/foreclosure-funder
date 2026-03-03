@@ -12,7 +12,7 @@ export async function signIn(formData: FormData) {
   })
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`)
+    redirect('/login?error=Invalid+email+or+password')
   }
   redirect('/dashboard')
 }
@@ -31,7 +31,7 @@ export async function signUp(formData: FormData) {
   })
 
   if (error) {
-    redirect(`/signup?error=${encodeURIComponent(error.message)}`)
+    redirect('/signup?error=Unable+to+create+account.+Please+try+again.')
   }
   redirect('/dashboard')
 }

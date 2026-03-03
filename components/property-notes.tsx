@@ -16,6 +16,7 @@ export function PropertyNotes({ pipelineId, initialNotes }: { pipelineId: string
           setSaveStatus('saved')
           setTimeout(() => setSaveStatus('idle'), 2000)
         } catch (e) {
+          console.error('Failed to save notes:', e)
           setSaveStatus('idle')
         }
       }
@@ -41,7 +42,9 @@ export function PropertyNotes({ pipelineId, initialNotes }: { pipelineId: string
               await updateNotes(pipelineId, notes)
               setSaveStatus('saved')
               setTimeout(() => setSaveStatus('idle'), 2000)
-            } catch (e) {}
+            } catch (e) {
+              console.error('Failed to save notes on blur:', e)
+            }
           }
         }}
         placeholder="Add your research notes here..."

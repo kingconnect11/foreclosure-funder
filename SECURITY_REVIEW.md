@@ -206,10 +206,12 @@ const nextConfig = {
 
 ## Priority Action Items
 
-| Priority | Finding | Effort |
-|---|---|---|
-| **P1** | Fix profile update RLS to prevent role self-escalation | ~30 min |
-| **P2** | Add rate limiting to auth endpoints | ~2 hrs |
-| **P2** | Sanitize auth error messages | ~15 min |
-| **P3** | Add security headers to next.config.js | ~15 min |
-| **P3** | Evaluate `get_watching_count` information disclosure | ~15 min |
+| Priority | Finding | Status | Fix |
+|---|---|---|---|
+| **P1** | Fix profile update RLS to prevent role self-escalation | FIXED | `supabase/migrations/20260303000001_guard_profile_updates.sql` — BEFORE UPDATE trigger blocks role/subscription/deal_room changes for non-service-role callers |
+| **P2** | Ownership verification + enum validation in `changeStage()` | FIXED | `actions/pipeline.ts` — verifies pipeline ownership before stage history writes; validates `newStage` against `pipeline_stage` enum |
+| **P2** | Sanitize auth error messages | FIXED | `actions/auth.ts` — replaced `error.message` with generic messages |
+| **P2** | Add rate limiting to auth endpoints | TODO | Recommend `@upstash/ratelimit` or Supabase auth rate limits in `config.toml` |
+| **P3** | Add security headers to next.config.js | FIXED | `next.config.js` — added `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `HSTS` |
+| **P3** | Fix silent error swallowing | FIXED | `components/property-notes.tsx` — added `console.error` to empty catch blocks |
+| **P3** | Evaluate `get_watching_count` information disclosure | DEFERRED | Product decision — counts are useful UX; revisit if competitive concerns arise |

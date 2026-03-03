@@ -1,7 +1,7 @@
 "use client"
 
 import { Profile } from "@/lib/types"
-import { useState } from "react"
+import React, { useState } from "react"
 import { ChevronDown, ChevronRight, User } from "lucide-react"
 
 export function InvestorTable({ 

@@ -92,7 +92,7 @@ export function StageProgress({
     )
   }
 
-  const currentIndex = STAGES.indexOf(pipelineEntry.stage)
+  const currentIndex = pipelineEntry.stage ? STAGES.indexOf(pipelineEntry.stage) : -1
 
   return (
     <>

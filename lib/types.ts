@@ -307,6 +307,41 @@ export type Database = {
         }
         Relationships: []
       }
+      pipeline_stage_history: {
+        Row: {
+          id: string
+          pipeline_id: string
+          stage: Database["public"]["Enums"]["pipeline_stage"]
+          notes: string | null
+          entered_at: string | null
+          exited_at: string | null
+        }
+        Insert: {
+          id?: string
+          pipeline_id: string
+          stage: Database["public"]["Enums"]["pipeline_stage"]
+          notes?: string | null
+          entered_at?: string | null
+          exited_at?: string | null
+        }
+        Update: {
+          id?: string
+          pipeline_id?: string
+          stage?: Database["public"]["Enums"]["pipeline_stage"]
+          notes?: string | null
+          entered_at?: string | null
+          exited_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_stage_history_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "investor_pipeline"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outreach_campaigns: {
         Row: {
           created_at: string | null
@@ -794,6 +829,15 @@ export type InvestorPreferences = Database['public']['Tables']['investor_prefere
 export type RecommendationScore = Database['public']['Tables']['recommendation_scores']['Row']
 export type OutreachCampaign = Database['public']['Tables']['outreach_campaigns']['Row']
 export type PipelineStage = Database['public']['Enums']['pipeline_stage']
+
+export interface PipelineStageHistory {
+  id: string
+  pipeline_id: string
+  stage: PipelineStage
+  notes: string | null
+  entered_at: string | null
+  exited_at: string | null
+}
 export type PropertyStage = Database['public']['Enums']['property_stage']
 export type UserRole = Database['public']['Enums']['user_role']
 export type TitleStatus = Database['public']['Enums']['title_status']

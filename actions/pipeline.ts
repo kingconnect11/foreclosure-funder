@@ -32,6 +32,24 @@ export async function changeStage(pipelineId: string, newStage: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  // Close the current stage history row (set exited_at)
+  await supabase
+    .from('pipeline_stage_history')
+    .update({ exited_at: new Date().toISOString() })
+    .eq('pipeline_id', pipelineId)
+    .is('exited_at', null)
+
+  // Insert new stage history row
+  const { error: historyError } = await supabase
+    .from('pipeline_stage_history')
+    .insert({
+      pipeline_id: pipelineId,
+      stage: newStage as any,
+    })
+
+  if (historyError) throw historyError
+
+  // Update the pipeline entry stage (existing behavior)
   const { error } = await supabase
     .from('investor_pipeline')
     .update({

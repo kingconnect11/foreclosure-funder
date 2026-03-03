@@ -5,10 +5,22 @@ import {
   getCurrentUser,
   getUserPipeline
 } from '@/lib/queries'
+import { Suspense } from 'react'
 import { StatCard } from '@/components/stat-card'
 import { FilterBar } from '@/components/filter-bar'
 import { PropertyCard } from '@/components/property-card'
 import Link from 'next/link'
+
+function FilterBarSkeleton() {
+  return (
+    <div className="flex flex-col md:flex-row gap-4 mb-8">
+      <div className="bg-surface border border-border rounded h-[38px] w-[160px] animate-pulse" />
+      <div className="bg-surface border border-border rounded h-[38px] w-[160px] animate-pulse" />
+      <div className="bg-surface border border-border rounded h-[38px] w-[160px] animate-pulse" />
+      <div className="bg-surface border border-border rounded h-[38px] flex-1 animate-pulse" />
+    </div>
+  )
+}
 
 export default async function DashboardPage({
   searchParams,
@@ -31,7 +43,7 @@ export default async function DashboardPage({
       city: params.city,
       sort: params.sort,
       search: params.search,
-      page: params.page ? parseInt(params.page) : 0,
+      page: params.page ? parseInt(params.page) : 1,
     }),
     getDistinctCities(),
     getDashboardStats(user.id),
@@ -41,7 +53,7 @@ export default async function DashboardPage({
   const savedPropertyIds = new Set(pipeline.map(p => p.property_id))
 
   const totalPages = Math.ceil(total / 30)
-  const currentPage = params.page ? parseInt(params.page) : 0
+  const currentPage = params.page ? parseInt(params.page) : 1
 
   const getPageUrl = (page: number) => {
     const p = new URLSearchParams()
@@ -49,7 +61,7 @@ export default async function DashboardPage({
     if (params.city) p.set('city', params.city)
     if (params.sort) p.set('sort', params.sort)
     if (params.search) p.set('search', params.search)
-    if (page > 0) p.set('page', page.toString())
+    if (page > 1) p.set('page', page.toString())
     return `/dashboard?${p.toString()}`
   }
 
@@ -64,7 +76,9 @@ export default async function DashboardPage({
         <StatCard label="In Your Pipeline" value={stats.inPipeline} />
       </div>
 
-      <FilterBar cities={cities} />
+      <Suspense fallback={<FilterBarSkeleton />}>
+        <FilterBar cities={cities} />
+      </Suspense>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
         {properties.map(property => (
@@ -84,7 +98,7 @@ export default async function DashboardPage({
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 py-8">
-          {currentPage > 0 ? (
+          {currentPage > 1 ? (
             <Link 
               href={getPageUrl(currentPage - 1)}
               className="px-4 py-2 border border-border text-text-secondary hover:text-text-primary rounded text-sm"
@@ -96,10 +110,10 @@ export default async function DashboardPage({
           )}
           
           <span className="text-sm text-text-secondary">
-            Page {currentPage + 1} of {totalPages}
+            Page {currentPage} of {totalPages}
           </span>
           
-          {currentPage < totalPages - 1 ? (
+          {currentPage < totalPages ? (
             <Link 
               href={getPageUrl(currentPage + 1)}
               className="px-4 py-2 border border-border text-text-secondary hover:text-text-primary rounded text-sm"

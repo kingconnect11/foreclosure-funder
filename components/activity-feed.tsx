@@ -1,10 +1,14 @@
 import { formatDistanceToNow } from 'date-fns'
+import { Activity } from 'lucide-react'
 
 export function ActivityFeed({ activity }: { activity: any[] }) {
   if (!activity || activity.length === 0) {
     return (
-      <div className="bg-surface border border-border rounded p-6 text-center text-text-muted text-sm">
-        No recent activity found.
+      <div className="flex flex-col items-center justify-center py-12 gap-3 bg-surface border border-border rounded p-6">
+        <Activity className="w-8 h-8 text-text-muted" />
+        <p className="text-text-muted text-sm text-center">
+          No activity yet. Investors will appear here once they start saving properties.
+        </p>
       </div>
     )
   }
@@ -40,9 +44,9 @@ export function ActivityFeed({ activity }: { activity: any[] }) {
     <div className="bg-surface border border-border rounded p-1">
       <ul className="flex flex-col divide-y divide-border">
         {activity.map((entry) => (
-          <li key={entry.id} className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <span className="text-sm text-text-secondary">{formatAction(entry)}</span>
-            <span className="text-[12px] text-text-muted whitespace-nowrap">
+          <li key={entry.id} className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 flex-wrap">
+            <span className="text-sm text-text-secondary min-w-0 break-words">{formatAction(entry)}</span>
+            <span className="text-[12px] text-text-muted whitespace-nowrap shrink-0">
               {entry.updated_at ? formatDistanceToNow(new Date(entry.updated_at), { addSuffix: true }) : ''}
             </span>
           </li>

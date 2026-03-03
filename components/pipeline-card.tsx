@@ -9,8 +9,6 @@ export function PipelineCard({ entry }: { entry: PipelineEntryWithProperty }) {
   const { properties: property } = entry
   
   const urgency = saleDateUrgency(property.sale_date)
-  const dateColor = urgency === 'danger' ? 'text-danger' : urgency === 'warning' ? 'text-warning' : 'text-text-secondary'
-
   const notesPreview = entry.notes && entry.notes.length > 60 
     ? entry.notes.substring(0, 60) + '...'
     : entry.notes
@@ -29,8 +27,22 @@ export function PipelineCard({ entry }: { entry: PipelineEntryWithProperty }) {
         </div>
 
         {property.sale_date && (
-          <div className={clsx("font-data text-[12px]", dateColor)}>
-            Sale: {formatDate(property.sale_date)}
+          <div className={clsx(
+            "font-data text-[12px] flex items-center gap-2 flex-wrap",
+            urgency === 'danger' && "text-danger",
+            urgency === 'warning' && "text-warning",
+            urgency === 'normal' && "text-text-secondary"
+          )}>
+            {urgency === 'danger' && (
+              <span className="relative flex h-1.5 w-1.5 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-danger opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-danger" />
+              </span>
+            )}
+            {urgency === 'warning' && (
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-warning shrink-0" />
+            )}
+            <span>Sale: {formatDate(property.sale_date)}</span>
           </div>
         )}
 

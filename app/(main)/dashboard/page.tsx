@@ -10,6 +10,8 @@ import { StatCard } from '@/components/stat-card'
 import { FilterBar } from '@/components/filter-bar'
 import { PropertyCard } from '@/components/property-card'
 import Link from 'next/link'
+import { Search } from 'lucide-react'
+import { KeyboardShortcuts } from '@/components/keyboard-shortcuts'
 
 function FilterBarSkeleton() {
   return (
@@ -67,9 +69,12 @@ export default async function DashboardPage({
 
   return (
     <div>
-      <h1 className="font-display font-bold text-[28px] mb-8 text-text-primary">Dashboard</h1>
+      <KeyboardShortcuts isAdmin={user.role === 'admin' || user.role === 'super_admin'} />
+      <h1 className="font-display font-bold text-[28px] mb-8 text-text-primary">
+        Welcome back, {user.full_name?.split(' ')[0] || 'Investor'}
+      </h1>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
         <StatCard label="Total Active" value={stats.totalActive} />
         <StatCard label="Auction Scheduled" value={stats.auctionScheduled} />
         <StatCard label="New This Week" value={stats.newThisWeek} />
@@ -80,7 +85,7 @@ export default async function DashboardPage({
         <FilterBar cities={cities} />
       </Suspense>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {properties.map(property => (
           <PropertyCard 
             key={property.id} 
@@ -88,16 +93,18 @@ export default async function DashboardPage({
             isSavedInitial={savedPropertyIds.has(property.id)} 
           />
         ))}
+        {properties.length === 0 && (
+          <div className="col-span-full flex flex-col items-center justify-center py-16 gap-4">
+            <Search className="w-10 h-10 text-text-muted" />
+            <p className="text-text-secondary text-sm text-center max-w-sm">
+              No properties match your current filters. Try adjusting your search or changing the stage filter.
+            </p>
+          </div>
+        )}
       </div>
 
-      {properties.length === 0 && (
-        <div className="text-center text-text-muted py-12">
-          No properties found matching your filters.
-        </div>
-      )}
-
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 py-8">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 py-8 flex-wrap">
           {currentPage > 1 ? (
             <Link 
               href={getPageUrl(currentPage - 1)}
@@ -109,7 +116,7 @@ export default async function DashboardPage({
             <div className="px-4 py-2 border border-border text-border rounded text-sm cursor-not-allowed">Previous</div>
           )}
           
-          <span className="text-sm text-text-secondary">
+          <span className="text-sm text-text-secondary hidden sm:inline">
             Page {currentPage} of {totalPages}
           </span>
           

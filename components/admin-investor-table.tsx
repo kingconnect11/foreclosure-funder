@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { Profile } from '@/lib/types'
+import { Users } from 'lucide-react'
 
 type InvestorWithSummary = Profile & {
   summary: Record<string, number>
@@ -12,9 +13,20 @@ const ACTIVE_STAGES = ['researching', 'site_visit', 'preparing_offer', 'offer_su
 export function AdminInvestorTable({ investors }: { investors: InvestorWithSummary[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
+  if (investors.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 gap-3 bg-surface border border-border rounded p-6">
+        <Users className="w-8 h-8 text-text-muted" />
+        <p className="text-text-muted text-sm text-center">
+          No investors have joined this deal room yet.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-surface border border-border rounded overflow-x-auto">
-      <table className="w-full text-left border-collapse whitespace-nowrap">
+      <table className="w-full text-left border-collapse whitespace-nowrap min-w-[600px]">
         <thead>
           <tr className="border-b border-border">
             <th className="px-5 py-4 text-[12px] font-medium uppercase tracking-[0.05em] text-text-muted">Name</th>
@@ -77,11 +89,6 @@ export function AdminInvestorTable({ investors }: { investors: InvestorWithSumma
               </React.Fragment>
             )
           })}
-          {investors.length === 0 && (
-            <tr>
-              <td colSpan={6} className="px-5 py-8 text-center text-text-muted">No investors found.</td>
-            </tr>
-          )}
         </tbody>
       </table>
     </div>

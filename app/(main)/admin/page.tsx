@@ -7,6 +7,7 @@ import {
 import { redirect } from 'next/navigation'
 import { AdminInvestorTable } from '@/components/admin-investor-table'
 import { ActivityFeed } from '@/components/activity-feed'
+import { KeyboardShortcuts } from '@/components/keyboard-shortcuts'
 
 export default async function AdminPage() {
   const user = await getCurrentUser()
@@ -30,6 +31,7 @@ export default async function AdminPage() {
 
   return (
     <div className="flex flex-col gap-12 pb-12">
+      <KeyboardShortcuts isAdmin={true} />
       <div className="flex flex-col gap-6">
         <h1 className="font-display font-bold text-[28px] text-text-primary">Admin Panel</h1>
       </div>

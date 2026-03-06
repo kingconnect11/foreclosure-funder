@@ -28,15 +28,15 @@ export default async function PropertyDetailPage({
 
   const [courtResearch, pipelineEntry, watchingCount, dealRoom] =
     await Promise.all([
-      getCourtResearch(property.id),
-      getPipelineEntry(user.id, property.id),
-      getWatchingCount(property.id),
-      user.deal_room_id ? getDealRoom(user.deal_room_id) : null,
+      getCourtResearch(property.id).catch(() => null),
+      getPipelineEntry(user.id, property.id).catch(() => null),
+      getWatchingCount(property.id).catch(() => 0),
+      user.deal_room_id ? getDealRoom(user.deal_room_id).catch(() => null) : null,
     ])
 
   // Second pass — needs pipeline entry ID
   const stageHistory = pipelineEntry
-    ? await getStageHistory(pipelineEntry.id)
+    ? await getStageHistory(pipelineEntry.id).catch(() => [])
     : []
 
   const googleMapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY

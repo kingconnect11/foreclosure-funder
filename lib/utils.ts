@@ -1,4 +1,19 @@
 import { format, formatDistanceToNow, differenceInDays } from 'date-fns'
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+export function formatPercent(value: number): string {
+  return `${value.toFixed(1)}%`
+}
+
+export function formatMonths(months: number): string {
+  if (months === 1) return '1 month'
+  return `${months} months`
+}
 
 export function formatCurrency(amount: number | null | undefined): string {
   if (amount == null) return '—'

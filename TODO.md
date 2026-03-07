@@ -81,6 +81,12 @@ See FOUNDING_ARCHITECTURE.md Section 10 for full spec.
 - [ ] **Keyboard shortcuts** -- No keyboard navigation (g+d for dashboard, g+p for pipeline, / for search). See PHASE1C_CURSOR_PROMPT.md Task 6. **Cursor**
 - [ ] **Data visualizations** -- recharts is installed but only used in deal analyzer. Could add charts to dashboard (property stage distribution, pipeline funnel). **Cursor**
 - [x] **Deal Analyzer visual refresh + guided insights playground** -- Refreshed analyzer layout/visual hierarchy and added deterministic guided insights with strategy filters, one-click assumption patches, and single-step undo. Also added highlight feedback on changed inputs for better scenario iteration flow (2026-03-07). **Codex**
+- [ ] **AI property descriptions (Anthropic, next phase low-medium)** -- Generate 1-2 sentence property blurbs server-side (not client-side) and store/cached per property, with manual regenerate option and fallback text when generation fails. **Claude Code/Codex**
+- [ ] **Dashboard/Pipeline thumbnails + Street View previews (next phase, low-medium)** -- Defer implementation until Google Maps API setup is complete. Add property thumbnail/Street View image support to dashboard and pipeline cards with graceful fallback when imagery is unavailable. **Codex/Cursor**
+- [ ] **Pipeline visual enrichment pack (next phase, low-medium)** -- Add richer pipeline lane headers and stage identity chips (color-coded by stage family), stronger card hierarchy, and denser visual cues without adding clutter. Visual direction constraint: avoid pink/purple; prefer blues/greens/reds/orange/yellow. **Codex/Cursor**
+- [ ] **Deal Analyzer side-by-side compare mode** -- Compare two properties/scenarios in parallel with delta highlights for profit, ROI, cash flow, and risk signals; target layout is two property detail cards visible at the same time with a comparison card beneath, while keeping the existing left menu/nav pattern. **Codex**
+- [ ] **Settings/menu UX redesign (future)** -- Improve overall button and menu architecture, including a dedicated settings menu pattern for app-wide controls. **Cursor/Codex**
+- [ ] **Pipeline motion polish + closed-stage celebration animation (next phase, low-medium)** -- Add tasteful motion (lane count transitions, optional staggered card reveals, urgency pulse behavior) and a more dramatic celebratory animation/state when a deal reaches `closed`. **Codex/Cursor**
 
 ### Schema / Security (Claude Code)
 
@@ -100,7 +106,6 @@ These are NOT Currently in the scope of alpha tasks. Listed here for context so 
 - [ ] Recommendation engine (Phase 3) -- `recommendation_scores` table is empty. Needs ideation first. Same rules as above, needs ideation before we get started coding. 
 - [ ] Outreach campaigns UI -- `outreach_campaigns` table exists, no interface. Higher priority
 - [ ] Stripe payment integration (Phase 4) -- Not processing payments during alpha/beta. Low priority.
-- [ ] Google Maps Street View toggle Med priority
 - [ ] Command palette (Cmd+K)
 - [ ] Drag-and-drop pipeline (kanban) Med priority
 - [ ] Dark mode toggle med priority

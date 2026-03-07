@@ -8,8 +8,10 @@ import {
   getStageHistory,
 } from '@/lib/queries'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import StageBadge from '@/components/stage-badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { Calculator } from 'lucide-react'
 import { StageProgress } from '@/components/stage-progress'
 import { PropertyNotes } from '@/components/property-notes'
 import { AdminGroupNotes } from '@/components/admin-group-notes'
@@ -79,6 +81,14 @@ export default async function PropertyDetailPage({
             </div>
           </div>
         </section>
+
+        <Link
+          href={`/deal-analyzer?propertyId=${property.id}`}
+          className="btn-primary inline-flex items-center gap-2 self-start"
+        >
+          <Calculator className="w-4 h-4" />
+          Analyze This Deal
+        </Link>
 
         {googleMapsKey && property.address && property.city && property.state && property.zip_code && (
           <section className="flex flex-col gap-4">

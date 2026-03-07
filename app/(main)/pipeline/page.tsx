@@ -1,6 +1,8 @@
 import { getUserPipeline, getCurrentUser } from '@/lib/queries'
 import { PipelineCard, PipelineEntryWithProperty } from '@/components/pipeline-card'
 import { PipelineStage } from '@/lib/types'
+import Link from 'next/link'
+import { Workflow } from 'lucide-react'
 
 const STAGES: PipelineStage[] = [
   'watching', 'researching', 'site_visit', 'preparing_offer', 
@@ -62,13 +64,21 @@ export default async function PipelinePage() {
       <div className="flex-1 overflow-x-auto pb-4">
         <div className="flex gap-6 min-h-full items-start">
           {activeColumns.length === 0 && (
-            <div className="text-text-muted text-sm w-full text-left py-12">
-              Your pipeline is empty. Save properties from the dashboard to get started.
+            <div className="zen-card w-full max-w-[520px] p-8 text-center flex flex-col items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-rice-100 flex items-center justify-center">
+                <Workflow className="w-6 h-6 text-ink-500" />
+              </div>
+              <p className="text-text-muted text-sm">
+                Your pipeline is empty. Save properties from the dashboard to get started.
+              </p>
+              <Link href="/dashboard" className="btn-secondary text-sm">
+                Browse Dashboard
+              </Link>
             </div>
           )}
           
           {activeColumns.map(stage => (
-            <div key={stage} className="flex flex-col gap-4 w-[320px] flex-shrink-0">
+            <div key={stage} className="flex flex-col gap-4 w-[280px] sm:w-[320px] flex-shrink-0">
               <div className="flex items-center justify-between border-b border-border pb-2">
                 <h2 className="font-body font-semibold text-[13px] uppercase tracking-[0.05em] text-text-secondary">
                   {formatStage(stage)}

@@ -13,8 +13,8 @@ export function AdminInvestorTable({ investors }: { investors: InvestorWithSumma
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   return (
-    <div className="bg-surface border border-border rounded overflow-x-auto">
-      <table className="w-full text-left border-collapse whitespace-nowrap">
+    <div className="bg-surface border border-border rounded overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+      <table className="w-full min-w-[760px] text-left border-collapse whitespace-nowrap">
         <thead>
           <tr className="border-b border-border">
             <th className="px-5 py-4 text-[12px] font-medium uppercase tracking-[0.05em] text-text-muted">Name</th>
@@ -54,7 +54,7 @@ export function AdminInvestorTable({ investors }: { investors: InvestorWithSumma
                   </td>
                 </tr>
                 {isExpanded && (
-                  <tr className="bg-[#0f1d30] border-b border-border">
+                  <tr className="bg-rice-50 border-b border-border">
                     <td colSpan={6} className="px-5 py-6">
                       <div className="flex flex-col gap-3">
                         <span className="text-[12px] font-medium uppercase tracking-[0.05em] text-text-muted">Pipeline Summary</span>

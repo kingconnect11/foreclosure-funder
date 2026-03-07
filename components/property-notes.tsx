@@ -10,11 +10,6 @@ export function PropertyNotes({ pipelineId, initialNotes }: { pipelineId: string
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
 
   useEffect(() => {
-    setNotes(initialNotes ?? '')
-    setLastSaved(initialNotes ?? '')
-  }, [pipelineId, initialNotes])
-
-  useEffect(() => {
     const timer = setTimeout(async () => {
       if (notes !== lastSaved) {
         setSaveStatus('saving')

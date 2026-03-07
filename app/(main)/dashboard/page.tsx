@@ -71,7 +71,9 @@ export default async function DashboardPage({
 
   return (
     <div>
-      <h1 className="font-display font-bold text-[28px] mb-8 text-text-primary">Dashboard</h1>
+      <h1 className="font-display font-bold text-[28px] mb-8 text-text-primary">
+        {user.full_name ? `Welcome back, ${user.full_name.split(' ')[0]}` : 'Dashboard'}
+      </h1>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
         <StatCard label="Total Active" value={stats.totalActive} />

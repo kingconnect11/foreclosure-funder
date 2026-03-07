@@ -80,6 +80,13 @@ export async function updateNotes(pipelineId: string, notes: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const { data: entry } = await supabase
+    .from('investor_pipeline')
+    .select('property_id')
+    .eq('id', pipelineId)
+    .eq('investor_id', user.id)
+    .single()
+
   const { error } = await supabase
     .from('investor_pipeline')
     .update({ notes })
@@ -87,6 +94,11 @@ export async function updateNotes(pipelineId: string, notes: string) {
     .eq('investor_id', user.id)
 
   if (error) throw error
+
+  revalidatePath('/pipeline')
+  if (entry?.property_id) {
+    revalidatePath(`/property/${entry.property_id}`)
+  }
 }
 
 export async function removeFromPipeline(pipelineId: string) {

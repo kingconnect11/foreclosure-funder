@@ -35,7 +35,7 @@ See FOUNDING_ARCHITECTURE.md Section 10 for full spec.
 - [x] **No loading.tsx skeleton files** -- Added `loading.tsx` for dashboard, pipeline, admin, property detail, and deal-analyzer routes (2026-03-06). **Codex**
 - [x] **Signup password confirmation not validated** -- Fixed server-side validation in `signUp` and added client-side mismatch blocking in signup form. **Claude Code/Codex** (completed 2026-03-06)
 - [x] **Middleware blocks upcoming public pages** -- Updated auth middleware allowlist so unauthenticated users can access `/`, `/pricing`, and `/onboarding` while still protecting app routes. **Codex** (completed 2026-03-06)
-- [ ] **No test suite** -- Zero tests. Need at minimum: build passes (current), unit tests for lib/utils and lib/deal-analyzer/calculations, integration tests for server actions, E2E for auth + pipeline flows. **Claude Code**
+- [x] **Test suite foundation** -- Vitest configured with 54 passing unit tests covering lib/utils and lib/deal-analyzer/calculations. Still needed: integration tests for server actions, E2E for auth + pipeline flows. **Claude Code** (2026-03-07)
 
 ### Landing Page & Pricing (assigned to Kimi)
 
@@ -64,9 +64,9 @@ See FOUNDING_ARCHITECTURE.md Section 10 for full spec.
 
 ### Backend / Data (Claude Code)
 
-- [ ] **Deal Analyzer not connected to property data** -- Currently standalone with hardcoded defaults. Should pre-fill from property detail page when navigating from a specific property. **Claude Code**
-- [ ] **updateNotes missing revalidation** -- `actions/pipeline.ts:updateNotes()` does not call `revalidatePath()` after saving. Notes changes do not reflect on pipeline page without manual refresh. **Claude Code**
-- [ ] **Personalized welcome message** -- Dashboard shows "Dashboard" heading instead of "Welcome back, {FirstName}". **Claude Code** (query change) + **Cursor** (UI)
+- [x] **Deal Analyzer connected to property data** -- Accepts `?propertyId=` URL param to pre-fill from property. "Analyze This Deal" button added to property detail page. Foreclosure amount maps to purchase price, county appraisal maps to ARV. **Claude Code** (2026-03-07)
+- [x] **updateNotes revalidation fixed** -- `actions/pipeline.ts:updateNotes()` now calls `revalidatePath()` for `/pipeline` and property detail page. **Claude Code** (2026-03-07)
+- [x] **Personalized welcome message** -- Dashboard heading shows "Welcome back, {FirstName}" with fallback to "Dashboard". **Claude Code** (2026-03-07)
 - [ ] **No email verification** -- Supabase signup does not require email confirmation. Anyone can create accounts with fake emails. **Claude Code** (Supabase config)
 
 ---

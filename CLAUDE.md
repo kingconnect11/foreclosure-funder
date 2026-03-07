@@ -178,6 +178,8 @@ npm run dev          # Dev server
 npm run build        # Production build (must pass zero TS errors)
 npm run start        # Production server
 npm run lint         # ESLint
+npm run test         # Vitest unit tests (54 tests)
+npm run test:watch   # Vitest in watch mode
 ```
 
 ---
@@ -211,14 +213,18 @@ See `AGENTS.md` for the full shared conventions. Key points:
 
 See `TODO.md` for the complete prioritized list with agent assignments. Critical items:
 1. No landing page or pricing page (P0 -- Kimi)
-2. No test suite (P0 -- Claude Code)
-3. Deal Analyzer not connected to property data (P1 -- Claude Code)
-4. court_research and recommendation_scores tables are empty (Phase 2-3)
+2. Test suite foundation done (54 unit tests); integration + E2E tests still needed (P0 -- Claude Code)
+3. court_research and recommendation_scores tables are empty (Phase 2-3)
+4. No email verification on signup (P1 -- Claude Code)
 
 ---
 
 ## Recent Changes (update after every task)
 
+- 2026-03-07: Test suite foundation -- vitest configured with 54 passing unit tests (24 for lib/utils, 30 for lib/deal-analyzer/calculations); `npm run test` and `npm run test:watch` scripts added
+- 2026-03-07: Connected Deal Analyzer to property data -- accepts `?propertyId=` URL param; property detail page now has "Analyze This Deal" button; foreclosure amount maps to purchase price, county appraisal maps to ARV
+- 2026-03-07: Quick wins -- fixed updateNotes missing revalidatePath, replaced hardcoded color in deal-analyzer error.tsx with text-foreground token, added personalized "Welcome back, {FirstName}" dashboard heading
+- 2026-03-07: Committed all Codex work in 8 scoped batches -- auth hardening, onboarding form, loading skeletons, frontend polish, ESLint flat config, security migration, documentation, onboarding query
 - 2026-03-07: Added `docs/plans/2026-03-07-philip-todo-api-and-ai.md` with a concrete operator checklist for Google Maps key setup, local vs Vercel env placement, API abuse controls, and Anthropic rollout plan for property descriptions
 - 2026-03-07: Added `TODO.md` backlog item for Anthropic-powered 1-2 sentence AI property descriptions (server-side generation + cached storage + fallback behavior)
 - 2026-03-07: Recreated root `HANDOFF.md` as the single canonical handoff doc after accidental deletion during doc edits; added detailed reviewer checklist, risk notes, deployment context, and explicit next build order for pipeline/design backlog

@@ -1,6 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const PUBLIC_ROUTE_PREFIXES = ['/pricing', '/onboarding']
+
+function isPublicRoute(pathname: string) {
+  if (pathname === '/' || pathname === '/login' || pathname === '/signup') {
+    return true
+  }
+
+  return PUBLIC_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -27,12 +37,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Redirect unauthenticated users to /login (except auth pages)
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/signup')
-  ) {
+  // Redirect unauthenticated users to /login (except allowed public routes)
+  if (!user && !isPublicRoute(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

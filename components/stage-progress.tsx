@@ -264,7 +264,7 @@ export function StageProgress({
             {targetStage === 'closed' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <p className="sm:col-span-2 text-sm text-text-secondary">
-                  Closing will move this property from Pipeline to Owned and create an owned-property record.
+                  Closing will move this property from Pipeline to Portfolio and create a portfolio record.
                 </p>
                 <input
                   value={ownedDraft.address}
@@ -351,7 +351,7 @@ export function StageProgress({
                   onChange={(e) => setOwnedDraft((prev) => ({ ...prev, ownedNotes: e.target.value }))}
                   rows={3}
                   className="input-zen resize-none sm:col-span-2"
-                  placeholder="Owned property notes (optional)"
+                  placeholder="Portfolio property notes (optional)"
                 />
               </div>
             )}

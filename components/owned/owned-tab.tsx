@@ -113,7 +113,7 @@ export function OwnedTab({
     <div className="space-y-8">
       <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="zen-card p-5 space-y-4">
-          <h2 className="font-display text-[20px] text-text-primary">Upload Owned Properties (CSV)</h2>
+          <h2 className="font-display text-[20px] text-text-primary">Upload Portfolio Properties (CSV)</h2>
           <p className="text-[13px] text-text-muted">
             Required columns: <span className="font-mono">address, acquired_at, purchase_price, current_value</span>.
           </p>
@@ -161,7 +161,7 @@ export function OwnedTab({
         </div>
 
         <div className="zen-card p-5 space-y-4">
-          <h2 className="font-display text-[20px] text-text-primary">Add Owned Property</h2>
+          <h2 className="font-display text-[20px] text-text-primary">Add Portfolio Property</h2>
           <form action={createOwnedProperty} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="hidden" name="target_investor_id" value={targetInvestorId} />
             <input name="address" placeholder="Address*" className="input-zen sm:col-span-2" required />
@@ -271,10 +271,10 @@ export function OwnedTab({
       </section>
 
       <section className="space-y-4">
-        <h2 className="font-display text-[22px] text-text-primary">Owned Properties</h2>
+        <h2 className="font-display text-[22px] text-text-primary">Portfolio Properties</h2>
         {properties.length === 0 && (
           <div className="zen-card p-6 text-sm text-text-muted">
-            No owned properties yet. Import a CSV or add one manually.
+            No portfolio properties yet. Import a CSV or add one manually.
           </div>
         )}
 

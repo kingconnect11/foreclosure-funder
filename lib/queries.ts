@@ -306,26 +306,28 @@ export async function getUserPipeline(
 // ---------------------------------------------------------------------------
 
 export async function getOwnedProperties(
-  investorId: string
+  investorId: string,
+  filters: Pick<OwnedPropertyFilters, 'status' | 'search'> = {}
 ): Promise<OwnedPropertyWithCosts[]> {
   const supabase = await createClient()
   const supabaseAny = supabase as unknown as {
-    from: (table: string) => {
-      select: (columns: string) => {
-        eq: (column: string, value: string) => {
-          order: (
-            column: string,
-            options: { ascending: boolean }
-          ) => Promise<{ data: unknown; error: Error | null }>
-        }
-      }
-    }
+    from: (table: string) => any
   }
 
-  const { data, error } = await supabaseAny
+  let query = supabaseAny
     .from('owned_properties')
     .select('*, owned_property_cost_items(*)')
     .eq('investor_id', investorId)
+
+  if (filters.status) {
+    query = query.eq('status', filters.status)
+  }
+
+  if (filters.search) {
+    query = query.or(`address.ilike.%${filters.search}%,city.ilike.%${filters.search}%`)
+  }
+
+  const { data, error } = await query
     .order('acquired_at', { ascending: true })
 
   if (error) throw error
@@ -379,8 +381,11 @@ export async function getOwnedPropertiesPage(
   }
 }
 
-export async function getOwnedAnalytics(investorId: string): Promise<OwnedAnalytics> {
-  const properties = await getOwnedProperties(investorId)
+export async function getOwnedAnalytics(
+  investorId: string,
+  filters: Pick<OwnedPropertyFilters, 'status' | 'search'> = {}
+): Promise<OwnedAnalytics> {
+  const properties = await getOwnedProperties(investorId, filters)
   return calculateOwnedAnalytics(properties)
 }
 
@@ -424,6 +429,21 @@ export async function getDealRoomInvestors(
     .select('*')
     .eq('deal_room_id', dealRoomId)
     .eq('role', 'investor')
+    .order('full_name', { ascending: true })
+
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getDealRoomMembers(
+  dealRoomId: string
+): Promise<Profile[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('deal_room_id', dealRoomId)
     .order('full_name', { ascending: true })
 
   if (error) throw error

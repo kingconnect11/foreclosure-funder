@@ -361,8 +361,10 @@ function InvestorDashboardSection() {
           <FeatureBlock
             icon={Search}
             title="Real-Time Foreclosure Tracking"
-            description="Live data from county publications, updated continuously. See every new filing, sale date change, and status update as it happens. Filter by location, property type, sale timeline, and more."
+            description="Live data from county publications, updated continuously. Property intelligence reports included monthly (3-10 based on tier, $5 per additional). See every new filing, sale date change, and status update as it happens."
             features={[
+              "3-10 property intelligence reports monthly",
+              "$5 per additional report",
               "Live Sedgwick County foreclosure feed",
               "Advanced filtering by city, ZIP, and sale date",
               "Anonymous \"others watching\" indicator",
@@ -375,8 +377,10 @@ function InvestorDashboardSection() {
           <FeatureBlock
             icon={FileCheck}
             title="Court Research & Title Intelligence"
-            description="Automated analysis of court records saves you 4+ hours per property. Know liens, judgments, and title health before you ever drive to the site."
+            description="Automated analysis of court records saves you hours per property. 3-10 included reports monthly based on your tier ($5 per additional). Know liens, judgments, and title health before you ever drive to the site."
             features={[
+              "3-10 included reports monthly (tier-based)",
+              "$5 per additional report",
               "Automated Kansas court record lookup",
               "Lien detection (tax, mechanic, judgment)",
               "Title health assessment (clean/clouded/complex)",
@@ -419,7 +423,7 @@ function InvestorDashboardSection() {
           <FeatureBlock
             icon={PieChart}
             title="Portfolio Analytics"
-            description="Track your owned properties, construction costs, legal fees, and total profit/loss. Visual charts that update as you add data."
+            description="Track your portfolio properties, construction costs, legal fees, and total profit/loss. Visual charts that update as you add data."
             features={[
               "Total portfolio value tracking",
               "YTD and lifetime P/L calculations",
@@ -455,8 +459,9 @@ function DealRoomSection() {
             Deal Room
           </h2>
           <p className="text-lg text-ink-500 max-w-2xl">
-            White-labeled investor management for real estate agents. Provide concierge-level 
-            service to your investor group at scale.
+            White-labeled investor management for real estate agents. From our standard 
+            Deal Room ($1,100 setup) to Premium Deal Room ($2,500/mo) with on-site onboarding, 
+            automation setup, and 24hr support.
           </p>
         </motion.div>
 

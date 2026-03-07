@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { backfillClosedPipelineToOwned } from '@/actions/owned'
-import { getCurrentUser, getDealRoomInvestors, getOwnedAnalytics, getOwnedChartPreferences, getOwnedPropertiesPage } from '@/lib/queries'
+import { getCurrentUser, getDealRoomMembers, getOwnedAnalytics, getOwnedChartPreferences, getOwnedPropertiesPage } from '@/lib/queries'
 import type { Profile } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'
 import { OwnedTab } from '@/components/owned/owned-tab'
@@ -22,9 +22,13 @@ export default async function OwnedPage({
   let targetInvestorId = user.id
 
   if (isAdmin && user.deal_room_id) {
-    investorOptions = await getDealRoomInvestors(user.deal_room_id)
+    investorOptions = await getDealRoomMembers(user.deal_room_id)
+    const optionIds = new Set(investorOptions.map((member) => member.id))
+
     if (params.investorId && investorOptions.some((investor) => investor.id === params.investorId)) {
       targetInvestorId = params.investorId
+    } else if (optionIds.has(user.id)) {
+      targetInvestorId = user.id
     } else if (investorOptions.length > 0) {
       targetInvestorId = investorOptions[0].id
     }
@@ -37,7 +41,10 @@ export default async function OwnedPage({
       page: currentPage,
       pageSize: 12,
     }),
-    getOwnedAnalytics(targetInvestorId),
+    getOwnedAnalytics(targetInvestorId, {
+      status: statusFilter,
+      search: searchFilter,
+    }),
     getOwnedChartPreferences(user.id),
   ])
   const properties = ownedPage.properties
@@ -59,7 +66,7 @@ export default async function OwnedPage({
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <h1 className="font-display font-bold text-[28px] text-text-primary">Owned Properties</h1>
+          <h1 className="font-display font-bold text-[28px] text-text-primary">Portfolio</h1>
           <p className="text-text-muted text-sm mt-1">
             Track portfolio performance and historical deal outcomes in one place.
           </p>
@@ -80,12 +87,12 @@ export default async function OwnedPage({
         <form className="zen-card p-4 flex flex-col sm:flex-row gap-3 sm:items-end">
           <div className="flex-1">
             <label htmlFor="investorId" className="label-zen mb-1">
-              Investor
+              Portfolio Owner
             </label>
             <select id="investorId" name="investorId" defaultValue={targetInvestorId} className="input-zen">
               {investorOptions.map((investor) => (
                 <option key={investor.id} value={investor.id}>
-                  {investor.full_name || investor.email}
+                  {investor.full_name || investor.email} ({investor.role})
                 </option>
               ))}
             </select>
@@ -116,7 +123,7 @@ export default async function OwnedPage({
         <form action={backfillClosedPipelineToOwned}>
           <input type="hidden" name="target_investor_id" value={targetInvestorId} />
           <button type="submit" className="btn-ghost text-sm">
-            Backfill Closed to Owned
+            Backfill Closed to Portfolio
           </button>
         </form>
       </div>
@@ -156,6 +163,7 @@ export default async function OwnedPage({
       </div>
 
       <OwnedTab
+        key={targetInvestorId}
         analytics={analytics}
         properties={properties}
         pinnedChartIds={pinnedChartIds}

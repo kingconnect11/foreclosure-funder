@@ -46,7 +46,7 @@ const milestones = [
   {
     year: "2024",
     title: "The Problem",
-    description: "Mike King spent 4+ hours per week manually researching foreclosure properties for his investor clients. Dan Drake, his most active investor, spent even more time digging through court records."
+    description: "Mike King and his investor group spent an average of 320 combined hours researching properties each week. Between court records, title searches, and property analysis, every deal required days of manual work."
   },
   {
     year: "Early 2025",
@@ -61,7 +61,7 @@ const milestones = [
   {
     year: "2026",
     title: "Foreclosure Funder",
-    description: "The platform launches with a full CRM pipeline, court research automation, and deal analysis tools -- built specifically for Kansas foreclosure investors."
+    description: "The platform launches with a full CRM pipeline, court research automation, and deal analysis tools. Now each investor spends less than 30 minutes inputting data per month, but has 10x the actionable insights."
   }
 ];
 
@@ -85,10 +85,10 @@ const team = [
 ];
 
 const stats = [
-  { value: "81", label: "Properties Tracked", suffix: "+" },
-  { value: "12", label: "Pipeline Stages", suffix: "" },
-  { value: "35", label: "RLS Policies", suffix: "" },
-  { value: "1", label: "Market (for now)", suffix: "" }
+  { value: "320", label: "Hours Saved Weekly", suffix: "" },
+  { value: "30", label: "Minutes Per Month", suffix: "" },
+  { value: "10", label: "X More Insights", suffix: "" },
+  { value: "81", label: "Properties Tracked", suffix: "+" }
 ];
 
 function ValueCard({ 
@@ -290,7 +290,8 @@ function MissionSection() {
               <p className="text-ink-500 leading-relaxed mb-6">
                 Our mission is to democratize foreclosure intelligence: combining public 
                 records, court research, and property data into a single platform that 
-                saves investors 4+ hours per week and helps them make better decisions.
+                saves investor groups hundreds of hours per month. We have turned weeks of 
+                manual research into minutes of automated insights.
               </p>
               <p className="text-ink-500 leading-relaxed">
                 We started in Wichita because that is where Mike has built his real estate 

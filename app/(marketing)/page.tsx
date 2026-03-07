@@ -212,10 +212,10 @@ function HeroSection() {
               variants={fadeInUp}
               className="text-lg lg:text-xl text-ink-500 mb-8 max-w-xl mx-auto lg:mx-0"
             >
-              Stop juggling county records, spreadsheets, and gut feelings. 
-              Foreclosure Funder gives you real-time property intelligence, 
-              deal analysis, and pipeline management -- all in one platform 
-              built for Kansas investors.
+              Mike King and his investor group spent 320 hours per week on manual research. 
+              With Foreclosure Funder, they now spend less than 30 minutes per month 
+              inputting data -- and get 10x the actionable insights. Real-time property 
+              intelligence built for Kansas investors.
             </motion.p>
 
             <motion.div 
@@ -244,9 +244,9 @@ function HeroSection() {
               className="flex flex-wrap items-center justify-center lg:justify-start gap-6 mt-10 pt-10 border-t border-border/50"
             >
               {[
-                { value: 81, label: 'Properties Tracked', suffix: '+' },
-                { value: 12, label: 'Pipeline Stages', suffix: '' },
-                { value: 4, label: 'Analysis Strategies', suffix: '' },
+                { value: 320, label: 'Hours Saved Weekly', suffix: '' },
+                { value: 30, label: 'Minutes Per Month', suffix: '' },
+                { value: 10, label: 'X More Insights', suffix: '' },
               ].map((stat, idx) => (
                 <div key={idx} className="text-center lg:text-left">
                   <div className="font-display text-2xl font-bold text-foreground">
@@ -366,7 +366,7 @@ function FeaturesSection() {
     {
       icon: FileCheck,
       title: "Court Research & Title Intelligence",
-      description: "Automated lien and judgment analysis. Know title health before you drive. Estimated offer ranges based on encumbrance analysis."
+      description: "Automated lien and judgment analysis with 3-10 included reports per month (tier-based). Additional reports $5 each. Know title health before you drive."
     },
     {
       icon: TrendingUp,
@@ -381,7 +381,7 @@ function FeaturesSection() {
     {
       icon: PieChart,
       title: "Portfolio Analytics",
-      description: "Track your owned properties, construction costs, legal fees, and total P/L. Visual charts that update in real time as you add data."
+      description: "Track your portfolio properties, construction costs, legal fees, and total P/L. Visual charts that update in real time as you add data."
     },
     {
       icon: Users,

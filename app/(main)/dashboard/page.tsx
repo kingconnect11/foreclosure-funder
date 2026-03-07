@@ -88,12 +88,12 @@ export default async function DashboardPage({
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.05em] text-text-muted mb-1">
-              Owned Portfolio Snapshot
+              Portfolio Snapshot
             </p>
             <h2 className="font-display text-[20px] text-text-primary">Performance to Date</h2>
           </div>
           <Link href="/owned" className="btn-secondary text-sm w-fit">
-            Open Owned Properties
+            Open Portfolio
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
@@ -118,7 +118,7 @@ export default async function DashboardPage({
             </p>
           </div>
           <div className="bg-background border border-border rounded p-3">
-            <p className="text-[11px] uppercase tracking-[0.05em] text-text-muted">Owned Value</p>
+            <p className="text-[11px] uppercase tracking-[0.05em] text-text-muted">Portfolio Value</p>
             <p className="font-data text-[20px] text-text-primary mt-1">
               {new Intl.NumberFormat('en-US', {
                 style: 'currency',

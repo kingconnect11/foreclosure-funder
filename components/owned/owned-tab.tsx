@@ -1,25 +1,21 @@
 'use client'
 
-import { useActionState, useMemo, useState, useTransition } from 'react'
+import Link from 'next/link'
+import { useActionState, useState } from 'react'
 import {
   createOwnedProperty,
   deleteOwnedCostItem,
   deleteOwnedProperty,
   importOwnedPropertiesCsv,
-  updateOwnedChartPreferences,
   updateOwnedProperty,
   upsertOwnedCostItem,
 } from '@/actions/owned'
 import type {
-  OwnedAnalytics,
-  OwnedChartId,
   OwnedCostCategory,
   OwnedPropertyCostItemRow,
   OwnedPropertyWithCosts,
 } from '@/lib/owned/types'
 import { formatCurrency } from '@/lib/utils'
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { Star } from 'lucide-react'
 import clsx from 'clsx'
 
 const INITIAL_IMPORT_STATE = {
@@ -38,63 +34,28 @@ function formatCategory(category: string): string {
     .join(' ')
 }
 
-function formatTooltipCurrency(value: number | string | undefined): string {
-  if (typeof value === 'number') return formatCurrency(value)
-  const parsed = Number(value ?? 0)
-  return formatCurrency(Number.isFinite(parsed) ? parsed : 0)
-}
-
-function sortedCharts(all: OwnedChartId[], pinned: OwnedChartId[]): OwnedChartId[] {
-  const pinnedSet = new Set(pinned)
-  const pinnedOrdered = all.filter((chart) => pinnedSet.has(chart))
-  const rest = all.filter((chart) => !pinnedSet.has(chart))
-  return [...pinnedOrdered, ...rest]
-}
-
-function getChartTitle(chart: OwnedChartId): string {
-  if (chart === 'value_vs_cost') return 'Portfolio Value vs Cumulative Cost'
-  if (chart === 'cost_category_mix') return 'Cost Category Mix'
-  return 'Profit/Loss Breakdown'
-}
-
 interface OwnedTabProps {
-  analytics: OwnedAnalytics
   properties: OwnedPropertyWithCosts[]
-  pinnedChartIds: OwnedChartId[]
   targetInvestorId: string
+  currentPage: number
+  totalPages: number
+  prevPageUrl: string | null
+  nextPageUrl: string | null
 }
 
 export function OwnedTab({
-  analytics,
   properties,
-  pinnedChartIds,
   targetInvestorId,
+  currentPage,
+  totalPages,
+  prevPageUrl,
+  nextPageUrl,
 }: OwnedTabProps) {
   const [importState, importAction, isImportPending] = useActionState(
     importOwnedPropertiesCsv,
     INITIAL_IMPORT_STATE
   )
-  const [pinned, setPinned] = useState<OwnedChartId[]>(pinnedChartIds)
   const [costFormState, setCostFormState] = useState<CostFormState>({})
-  const [isSavingCharts, startChartTransition] = useTransition()
-
-  const chartOrder = useMemo(
-    () => sortedCharts(['value_vs_cost', 'pl_breakdown', 'cost_category_mix'], pinned),
-    [pinned]
-  )
-
-  const handleTogglePin = (chart: OwnedChartId) => {
-    const isPinned = pinned.includes(chart)
-    const next = isPinned ? pinned.filter((id) => id !== chart) : [chart, ...pinned]
-    setPinned(next)
-    startChartTransition(async () => {
-      try {
-        await updateOwnedChartPreferences(next)
-      } catch {
-        setPinned(pinned)
-      }
-    })
-  }
 
   const costDefaults = (propertyId: string) =>
     costFormState[propertyId] ?? { category: 'construction', subcategory: 'general' }
@@ -111,165 +72,6 @@ export function OwnedTab({
 
   return (
     <div className="space-y-8">
-      <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <div className="zen-card p-5 space-y-4">
-          <h2 className="font-display text-[20px] text-text-primary">Upload Portfolio Properties (CSV)</h2>
-          <p className="text-[13px] text-text-muted">
-            Required columns: <span className="font-mono">address, acquired_at, purchase_price, current_value</span>.
-          </p>
-          <form action={importAction} className="space-y-3">
-            <input type="hidden" name="target_investor_id" value={targetInvestorId} />
-            <input
-              type="file"
-              name="file"
-              accept=".csv,text/csv"
-              className="input-zen min-h-[44px] file:mr-3 file:px-3 file:py-2 file:rounded file:border-0 file:bg-accent/10 file:text-accent"
-              required
-            />
-            <button
-              type="submit"
-              disabled={isImportPending}
-              className="btn-primary w-full sm:w-auto"
-            >
-              {isImportPending ? 'Importing...' : 'Import CSV'}
-            </button>
-          </form>
-
-          {importState.message && (
-            <div
-              className={clsx(
-                'text-sm rounded border px-3 py-2',
-                importState.success
-                  ? 'bg-success/10 border-success/30 text-success'
-                  : 'bg-warning/10 border-warning/30 text-warning-dark'
-              )}
-            >
-              {importState.message}
-            </div>
-          )}
-
-          {importState.errorRows.length > 0 && (
-            <div className="bg-rice-50 border border-border rounded p-3">
-              <p className="text-xs font-medium uppercase tracking-[0.05em] text-text-muted mb-2">Import Warnings</p>
-              <ul className="space-y-1 text-xs text-text-secondary">
-                {importState.errorRows.map((error) => (
-                  <li key={error}>{error}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        <div className="zen-card p-5 space-y-4">
-          <h2 className="font-display text-[20px] text-text-primary">Add Portfolio Property</h2>
-          <form action={createOwnedProperty} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input type="hidden" name="target_investor_id" value={targetInvestorId} />
-            <input name="address" placeholder="Address*" className="input-zen sm:col-span-2" required />
-            <input name="city" placeholder="City" className="input-zen" />
-            <input name="state" placeholder="State" className="input-zen" />
-            <input name="zip_code" placeholder="ZIP" className="input-zen" />
-            <input name="acquired_at" type="date" className="input-zen" required />
-            <select name="status" className="input-zen">
-              <option value="active">Active</option>
-              <option value="sold">Sold</option>
-            </select>
-            <input name="purchase_price" type="number" step="0.01" min="0" placeholder="Purchase Price" className="input-zen" />
-            <input name="current_value" type="number" step="0.01" min="0" placeholder="Current Value" className="input-zen" />
-            <input name="sale_price" type="number" step="0.01" min="0" placeholder="Sale Price (if sold)" className="input-zen" />
-            <input name="sold_at" type="date" className="input-zen" />
-            <input name="construction_cost_total" type="number" step="0.01" min="0" placeholder="Construction Total" className="input-zen" />
-            <input name="legal_fees_total" type="number" step="0.01" min="0" placeholder="Legal Fees Total" className="input-zen" />
-            <input name="interest_paid_total" type="number" step="0.01" min="0" placeholder="Interest Paid Total" className="input-zen" />
-            <textarea
-              name="notes"
-              placeholder="Notes"
-              className="input-zen sm:col-span-2 min-h-[88px] resize-y"
-            />
-            <button type="submit" className="btn-primary sm:col-span-2">Add Property</button>
-          </form>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-[22px] text-text-primary">Portfolio Charts</h2>
-          <span className="text-xs text-text-muted">
-            {isSavingCharts ? 'Saving chart favorites...' : 'Click star to pin charts'}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {chartOrder.map((chartId) => {
-            const isPinned = pinned.includes(chartId)
-            return (
-              <div key={chartId} className="zen-card p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-[14px] font-semibold uppercase tracking-[0.05em] text-text-secondary">
-                    {getChartTitle(chartId)}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => handleTogglePin(chartId)}
-                    className={clsx(
-                      'h-9 w-9 rounded-full border flex items-center justify-center transition-colors',
-                      isPinned
-                        ? 'border-warning bg-warning/10 text-warning-dark'
-                        : 'border-border text-text-muted hover:text-warning-dark'
-                    )}
-                    aria-label={isPinned ? 'Unpin chart' : 'Pin chart'}
-                  >
-                    <Star className={clsx('w-4 h-4', isPinned && 'fill-current')} />
-                  </button>
-                </div>
-
-                {chartId === 'value_vs_cost' && (
-                  <div className="h-[260px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={analytics.trend}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
-                        <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
-                        <Tooltip />
-                        <Line type="monotone" dataKey="portfolioValue" stroke="#2E86DE" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="cumulativeCost" stroke="#E74C3C" strokeWidth={2} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-
-                {chartId === 'pl_breakdown' && (
-                  <div className="h-[260px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics.plBreakdown}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
-                        <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
-                        <Tooltip formatter={formatTooltipCurrency} />
-                        <Bar dataKey="value" fill="#16A085" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-
-                {chartId === 'cost_category_mix' && (
-                  <div className="h-[260px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics.categoryBreakdown}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
-                        <XAxis dataKey="category" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
-                        <Tooltip formatter={formatTooltipCurrency} />
-                        <Bar dataKey="amount" fill="#F39C12" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </section>
-
       <section className="space-y-4">
         <h2 className="font-display text-[22px] text-text-primary">Portfolio Properties</h2>
         {properties.length === 0 && (
@@ -440,6 +242,103 @@ export function OwnedTab({
             </details>
           )
         })}
+      </section>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 py-2">
+          {prevPageUrl ? (
+            <Link href={prevPageUrl} className="btn-secondary text-sm">Previous</Link>
+          ) : (
+            <span className="btn-secondary text-sm opacity-40 cursor-not-allowed">Previous</span>
+          )}
+          <span className="text-sm text-text-secondary">
+            Page {currentPage} of {totalPages}
+          </span>
+          {nextPageUrl ? (
+            <Link href={nextPageUrl} className="btn-secondary text-sm">Next</Link>
+          ) : (
+            <span className="btn-secondary text-sm opacity-40 cursor-not-allowed">Next</span>
+          )}
+        </div>
+      )}
+
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-6 pt-6 border-t border-border">
+        <div className="zen-card p-5 space-y-4">
+          <h2 className="font-display text-[20px] text-text-primary">Upload Portfolio Properties (CSV)</h2>
+          <p className="text-[13px] text-text-muted">
+            Required columns: <span className="font-mono">address, acquired_at, purchase_price, current_value</span>.
+          </p>
+          <form action={importAction} className="space-y-3">
+            <input type="hidden" name="target_investor_id" value={targetInvestorId} />
+            <input
+              type="file"
+              name="file"
+              accept=".csv,text/csv"
+              className="input-zen min-h-[44px] file:mr-3 file:px-3 file:py-2 file:rounded file:border-0 file:bg-accent/10 file:text-accent"
+              required
+            />
+            <button
+              type="submit"
+              disabled={isImportPending}
+              className="btn-primary w-full sm:w-auto"
+            >
+              {isImportPending ? 'Importing...' : 'Import CSV'}
+            </button>
+          </form>
+
+          {importState.message && (
+            <div
+              className={clsx(
+                'text-sm rounded border px-3 py-2',
+                importState.success
+                  ? 'bg-success/10 border-success/30 text-success'
+                  : 'bg-warning/10 border-warning/30 text-warning-dark'
+              )}
+            >
+              {importState.message}
+            </div>
+          )}
+
+          {importState.errorRows.length > 0 && (
+            <div className="bg-rice-50 border border-border rounded p-3">
+              <p className="text-xs font-medium uppercase tracking-[0.05em] text-text-muted mb-2">Import Warnings</p>
+              <ul className="space-y-1 text-xs text-text-secondary">
+                {importState.errorRows.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        <div className="zen-card p-5 space-y-4">
+          <h2 className="font-display text-[20px] text-text-primary">Add Portfolio Property</h2>
+          <form action={createOwnedProperty} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input type="hidden" name="target_investor_id" value={targetInvestorId} />
+            <input name="address" placeholder="Address*" className="input-zen sm:col-span-2" required />
+            <input name="city" placeholder="City" className="input-zen" />
+            <input name="state" placeholder="State" className="input-zen" />
+            <input name="zip_code" placeholder="ZIP" className="input-zen" />
+            <input name="acquired_at" type="date" className="input-zen" required />
+            <select name="status" className="input-zen">
+              <option value="active">Active</option>
+              <option value="sold">Sold</option>
+            </select>
+            <input name="purchase_price" type="number" step="0.01" min="0" placeholder="Purchase Price" className="input-zen" />
+            <input name="current_value" type="number" step="0.01" min="0" placeholder="Current Value" className="input-zen" />
+            <input name="sale_price" type="number" step="0.01" min="0" placeholder="Sale Price (if sold)" className="input-zen" />
+            <input name="sold_at" type="date" className="input-zen" />
+            <input name="construction_cost_total" type="number" step="0.01" min="0" placeholder="Construction Total" className="input-zen" />
+            <input name="legal_fees_total" type="number" step="0.01" min="0" placeholder="Legal Fees Total" className="input-zen" />
+            <input name="interest_paid_total" type="number" step="0.01" min="0" placeholder="Interest Paid Total" className="input-zen" />
+            <textarea
+              name="notes"
+              placeholder="Notes"
+              className="input-zen sm:col-span-2 min-h-[88px] resize-y"
+            />
+            <button type="submit" className="btn-primary sm:col-span-2">Add Property</button>
+          </form>
+        </div>
       </section>
     </div>
   )

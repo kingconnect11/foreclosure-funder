@@ -30,6 +30,11 @@ const COST_CATEGORIES: OwnedCostCategory[] = [
   'other',
 ]
 
+function revalidatePortfolioPaths() {
+  revalidatePath('/portfolio')
+  revalidatePath('/owned')
+}
+
 type ViewerProfile = {
   id: string
   role: 'investor' | 'admin' | 'super_admin'
@@ -278,7 +283,7 @@ export async function createOwnedProperty(formData: FormData) {
   const { error } = await db.from('owned_properties').insert(payload)
   if (error) throw error
 
-  revalidatePath('/owned')
+  revalidatePortfolioPaths()
   revalidatePath('/dashboard')
 }
 
@@ -333,7 +338,7 @@ export async function updateOwnedProperty(formData: FormData) {
 
   if (error) throw error
 
-  revalidatePath('/owned')
+  revalidatePortfolioPaths()
   revalidatePath('/dashboard')
 }
 
@@ -357,7 +362,7 @@ export async function deleteOwnedProperty(formData: FormData) {
 
   if (error) throw error
 
-  revalidatePath('/owned')
+  revalidatePortfolioPaths()
   revalidatePath('/dashboard')
 }
 
@@ -461,7 +466,7 @@ export async function importOwnedPropertiesCsv(
     }
   }
 
-  revalidatePath('/owned')
+  revalidatePortfolioPaths()
   revalidatePath('/dashboard')
 
   return {
@@ -508,7 +513,7 @@ export async function upsertOwnedCostItem(formData: FormData) {
 
   if (error) throw error
 
-  revalidatePath('/owned')
+  revalidatePortfolioPaths()
 }
 
 export async function deleteOwnedCostItem(formData: FormData) {
@@ -530,7 +535,7 @@ export async function deleteOwnedCostItem(formData: FormData) {
     .eq('id', id)
 
   if (error) throw error
-  revalidatePath('/owned')
+  revalidatePortfolioPaths()
 }
 
 export async function updateOwnedChartPreferences(pinnedChartIds: OwnedChartId[]) {
@@ -553,7 +558,7 @@ export async function updateOwnedChartPreferences(pinnedChartIds: OwnedChartId[]
   )
 
   if (error) throw error
-  revalidatePath('/owned')
+  revalidatePortfolioPaths()
 }
 
 export async function backfillClosedPipelineToOwned(formData: FormData) {
@@ -612,7 +617,7 @@ export async function backfillClosedPipelineToOwned(formData: FormData) {
   }>
 
   if (rows.length === 0) {
-    revalidatePath('/owned')
+    revalidatePortfolioPaths()
     return
   }
 
@@ -649,7 +654,7 @@ export async function backfillClosedPipelineToOwned(formData: FormData) {
     .in('id', pipelineIds)
   if (updateError) throw updateError
 
-  revalidatePath('/owned')
+  revalidatePortfolioPaths()
   revalidatePath('/pipeline')
   revalidatePath('/dashboard')
 }

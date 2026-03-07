@@ -52,7 +52,7 @@ export default function Nav({
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/pipeline', label: 'Pipeline', icon: Workflow },
-    { href: '/owned', label: 'Portfolio', icon: Building2 },
+    { href: '/portfolio', label: 'Portfolio', icon: Building2 },
     { href: '/deal-analyzer', label: 'Deal Analyzer', icon: Calculator },
     ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: Shield }] : []),
   ]

@@ -92,7 +92,7 @@ export default async function DashboardPage({
             </p>
             <h2 className="font-display text-[20px] text-text-primary">Performance to Date</h2>
           </div>
-          <Link href="/owned" className="btn-secondary text-sm w-fit">
+          <Link href="/portfolio" className="btn-secondary text-sm w-fit">
             Open Portfolio
           </Link>
         </div>

@@ -199,6 +199,7 @@ export async function changeStageAndConvertToOwned(
   if (pipelineUpdateError) throw pipelineUpdateError
 
   revalidatePath('/pipeline')
+  revalidatePath('/portfolio')
   revalidatePath('/owned')
   revalidatePath('/dashboard')
   if (pipelineEntry.property_id) {

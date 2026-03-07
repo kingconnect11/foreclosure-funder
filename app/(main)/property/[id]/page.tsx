@@ -175,7 +175,25 @@ export default async function PropertyDetailPage({
 
       {/* Right Column */}
       <div className="flex flex-col gap-6">
-        <StageProgress propertyId={property.id} pipelineEntry={pipelineEntry} stageHistory={stageHistory} />
+        <StageProgress
+          propertyId={property.id}
+          pipelineEntry={pipelineEntry}
+          stageHistory={stageHistory}
+          propertyPrefill={{
+            address: property.address ?? null,
+            city: property.city ?? null,
+            state: property.state ?? null,
+            zipCode: property.zip_code ?? null,
+            purchasePrice:
+              property.foreclosure_amount !== null && property.foreclosure_amount !== undefined
+                ? Number(property.foreclosure_amount)
+                : null,
+            currentValue:
+              property.county_appraisal !== null && property.county_appraisal !== undefined
+                ? Number(property.county_appraisal)
+                : null,
+          }}
+        />
 
         {watchingCount > 1 && (
           <div className="bg-surface border border-border rounded p-4 flex items-center justify-center gap-2 text-text-secondary text-sm">

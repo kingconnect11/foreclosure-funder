@@ -3,7 +3,8 @@ import {
   getDistinctCities,
   getDashboardStats,
   getCurrentUser,
-  getUserPipeline
+  getUserPipeline,
+  getOwnedAnalytics,
 } from '@/lib/queries'
 import { Suspense } from 'react'
 import { StatCard } from '@/components/stat-card'
@@ -38,7 +39,7 @@ export default async function DashboardPage({
   const user = await getCurrentUser()
   if (!user) return null
 
-  const [{ properties, total }, cities, stats, pipeline] = await Promise.all([
+  const [{ properties, total }, cities, stats, pipeline, ownedAnalytics] = await Promise.all([
     getProperties({
       stage: params.stage,
       city: params.city,
@@ -48,7 +49,8 @@ export default async function DashboardPage({
     }),
     getDistinctCities(),
     getDashboardStats(user.id),
-    getUserPipeline(user.id)
+    getUserPipeline(user.id),
+    getOwnedAnalytics(user.id),
   ])
 
   const savedPropertyIds = new Set(pipeline.map(p => p.property_id))
@@ -80,6 +82,52 @@ export default async function DashboardPage({
         <StatCard label="Auction Scheduled" value={stats.auctionScheduled} />
         <StatCard label="New This Week" value={stats.newThisWeek} />
         <StatCard label="In Your Pipeline" value={stats.inPipeline} />
+      </div>
+
+      <div className="zen-card p-5 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-[0.05em] text-text-muted mb-1">
+              Owned Portfolio Snapshot
+            </p>
+            <h2 className="font-display text-[20px] text-text-primary">Performance to Date</h2>
+          </div>
+          <Link href="/owned" className="btn-secondary text-sm w-fit">
+            Open Owned Properties
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+          <div className="bg-background border border-border rounded p-3">
+            <p className="text-[11px] uppercase tracking-[0.05em] text-text-muted">Total P/L</p>
+            <p className="font-data text-[20px] text-text-primary mt-1">
+              {new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0,
+              }).format(ownedAnalytics.summary.totalProfitLoss)}
+            </p>
+          </div>
+          <div className="bg-background border border-border rounded p-3">
+            <p className="text-[11px] uppercase tracking-[0.05em] text-text-muted">YTD P/L</p>
+            <p className="font-data text-[20px] text-text-primary mt-1">
+              {new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0,
+              }).format(ownedAnalytics.summary.ytdProfitLoss)}
+            </p>
+          </div>
+          <div className="bg-background border border-border rounded p-3">
+            <p className="text-[11px] uppercase tracking-[0.05em] text-text-muted">Owned Value</p>
+            <p className="font-data text-[20px] text-text-primary mt-1">
+              {new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0,
+              }).format(ownedAnalytics.summary.totalPortfolioValue)}
+            </p>
+          </div>
+        </div>
       </div>
 
       <Suspense fallback={<FilterBarSkeleton />}>

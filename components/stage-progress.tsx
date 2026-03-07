@@ -1,7 +1,7 @@
 'use client'
 
 import { InvestorPipeline, PipelineStage, PipelineStageHistory } from '@/lib/types'
-import { saveToPipeline, changeStage } from '@/actions/pipeline'
+import { saveToPipeline, changeStage, changeStageAndConvertToOwned } from '@/actions/pipeline'
 import { useState } from 'react'
 import clsx from 'clsx'
 import { useRouter } from 'next/navigation'
@@ -30,15 +30,37 @@ export function StageProgress({
   propertyId,
   pipelineEntry,
   stageHistory = [],
+  propertyPrefill,
 }: {
   propertyId: string
   pipelineEntry: InvestorPipeline | null
   stageHistory?: PipelineStageHistory[]
+  propertyPrefill?: {
+    address: string | null
+    city: string | null
+    state: string | null
+    zipCode: string | null
+    purchasePrice: number | null
+    currentValue: number | null
+  }
 }) {
   const [isSaving, setIsSaving] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [targetStage, setTargetStage] = useState<PipelineStage | null>(null)
   const [modalNotes, setModalNotes] = useState('')
+  const [ownedDraft, setOwnedDraft] = useState({
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    acquiredAt: '',
+    purchasePrice: '',
+    currentValue: '',
+    constructionCostTotal: '',
+    legalFeesTotal: '',
+    interestPaidTotal: '',
+    ownedNotes: '',
+  })
   const router = useRouter()
 
   const handleSave = async () => {
@@ -57,6 +79,27 @@ export function StageProgress({
   const openModal = (stage: PipelineStage) => {
     setTargetStage(stage)
     setModalNotes('')
+    if (stage === 'closed') {
+      setOwnedDraft({
+        address: propertyPrefill?.address ?? '',
+        city: propertyPrefill?.city ?? '',
+        state: propertyPrefill?.state ?? '',
+        zipCode: propertyPrefill?.zipCode ?? '',
+        acquiredAt: new Date().toISOString().slice(0, 10),
+        purchasePrice:
+          propertyPrefill?.purchasePrice !== null && propertyPrefill?.purchasePrice !== undefined
+            ? String(propertyPrefill.purchasePrice)
+            : '',
+        currentValue:
+          propertyPrefill?.currentValue !== null && propertyPrefill?.currentValue !== undefined
+            ? String(propertyPrefill.currentValue)
+            : '',
+        constructionCostTotal: '',
+        legalFeesTotal: '',
+        interestPaidTotal: '',
+        ownedNotes: '',
+      })
+    }
     setShowModal(true)
   }
 
@@ -64,13 +107,46 @@ export function StageProgress({
     setShowModal(false)
     setTargetStage(null)
     setModalNotes('')
+    setOwnedDraft({
+      address: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      acquiredAt: '',
+      purchasePrice: '',
+      currentValue: '',
+      constructionCostTotal: '',
+      legalFeesTotal: '',
+      interestPaidTotal: '',
+      ownedNotes: '',
+    })
   }
 
   const confirmStageChange = async () => {
     if (!pipelineEntry || !targetStage || isSaving) return
     setIsSaving(true)
     try {
-      await changeStage(pipelineEntry.id, targetStage, modalNotes.trim() || undefined)
+      if (targetStage === 'closed') {
+        await changeStageAndConvertToOwned(
+          pipelineEntry.id,
+          {
+            address: ownedDraft.address.trim(),
+            city: ownedDraft.city.trim() || null,
+            state: ownedDraft.state.trim() || null,
+            zipCode: ownedDraft.zipCode.trim() || null,
+            acquiredAt: ownedDraft.acquiredAt,
+            purchasePrice: Number(ownedDraft.purchasePrice || 0),
+            currentValue: Number(ownedDraft.currentValue || 0),
+            constructionCostTotal: Number(ownedDraft.constructionCostTotal || 0),
+            legalFeesTotal: Number(ownedDraft.legalFeesTotal || 0),
+            interestPaidTotal: Number(ownedDraft.interestPaidTotal || 0),
+            notes: ownedDraft.ownedNotes.trim() || null,
+          },
+          modalNotes.trim() || undefined
+        )
+      } else {
+        await changeStage(pipelineEntry.id, targetStage, modalNotes.trim() || undefined)
+      }
       closeModal()
       router.refresh()
     } finally {
@@ -180,10 +256,106 @@ export function StageProgress({
 
       {showModal && targetStage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="zen-card p-6 w-full max-w-md mx-4 flex flex-col gap-4">
+          <div className="zen-card p-6 w-full max-w-2xl mx-4 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-display font-semibold text-foreground">
               Move to {formatStage(targetStage)}?
             </h3>
+
+            {targetStage === 'closed' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <p className="sm:col-span-2 text-sm text-text-secondary">
+                  Closing will move this property from Pipeline to Owned and create an owned-property record.
+                </p>
+                <input
+                  value={ownedDraft.address}
+                  onChange={(e) => setOwnedDraft((prev) => ({ ...prev, address: e.target.value }))}
+                  placeholder="Address"
+                  className="input-zen sm:col-span-2"
+                  required
+                />
+                <input
+                  value={ownedDraft.city}
+                  onChange={(e) => setOwnedDraft((prev) => ({ ...prev, city: e.target.value }))}
+                  placeholder="City"
+                  className="input-zen"
+                />
+                <input
+                  value={ownedDraft.state}
+                  onChange={(e) => setOwnedDraft((prev) => ({ ...prev, state: e.target.value }))}
+                  placeholder="State"
+                  className="input-zen"
+                />
+                <input
+                  value={ownedDraft.zipCode}
+                  onChange={(e) => setOwnedDraft((prev) => ({ ...prev, zipCode: e.target.value }))}
+                  placeholder="ZIP"
+                  className="input-zen"
+                />
+                <input
+                  type="date"
+                  value={ownedDraft.acquiredAt}
+                  onChange={(e) => setOwnedDraft((prev) => ({ ...prev, acquiredAt: e.target.value }))}
+                  className="input-zen"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={ownedDraft.purchasePrice}
+                  onChange={(e) => setOwnedDraft((prev) => ({ ...prev, purchasePrice: e.target.value }))}
+                  placeholder="Purchase Price"
+                  className="input-zen"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={ownedDraft.currentValue}
+                  onChange={(e) => setOwnedDraft((prev) => ({ ...prev, currentValue: e.target.value }))}
+                  placeholder="Current Value"
+                  className="input-zen"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={ownedDraft.constructionCostTotal}
+                  onChange={(e) =>
+                    setOwnedDraft((prev) => ({ ...prev, constructionCostTotal: e.target.value }))
+                  }
+                  placeholder="Construction Total"
+                  className="input-zen"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={ownedDraft.legalFeesTotal}
+                  onChange={(e) => setOwnedDraft((prev) => ({ ...prev, legalFeesTotal: e.target.value }))}
+                  placeholder="Legal Fees Total"
+                  className="input-zen"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={ownedDraft.interestPaidTotal}
+                  onChange={(e) =>
+                    setOwnedDraft((prev) => ({ ...prev, interestPaidTotal: e.target.value }))
+                  }
+                  placeholder="Interest Paid Total"
+                  className="input-zen"
+                />
+                <textarea
+                  value={ownedDraft.ownedNotes}
+                  onChange={(e) => setOwnedDraft((prev) => ({ ...prev, ownedNotes: e.target.value }))}
+                  rows={3}
+                  className="input-zen resize-none sm:col-span-2"
+                  placeholder="Owned property notes (optional)"
+                />
+              </div>
+            )}
+
             <textarea
               placeholder="Add notes for this stage transition (optional)"
               value={modalNotes}

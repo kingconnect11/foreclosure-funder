@@ -221,6 +221,7 @@ See `TODO.md` for the complete prioritized list with agent assignments. Critical
 
 ## Recent Changes (update after every task)
 
+- 2026-03-07: Built Owned Properties capability end-to-end -- added migration `20260307020000_owned_properties.sql` (owned tables, enums, RLS, pipeline `moved_to_owned_at`), server actions in `actions/owned.ts` (manual CRUD, CSV import with row validation, cost line-item CRUD, chart preference persistence, closed-pipeline backfill), owned analytics engine in `lib/owned/calculations.ts`, new `/owned` route + loading state + nav entry + chart pinning + filtering/pagination, dashboard owned KPI strip + link, and closed-stage conversion flow (`changeStageAndConvertToOwned`) that prompts for owned fields and moves closed deals out of active pipeline. Added tests in `__tests__/lib/owned-calculations.test.ts` (57 total passing).
 - 2026-03-07: Test suite foundation -- vitest configured with 54 passing unit tests (24 for lib/utils, 30 for lib/deal-analyzer/calculations); `npm run test` and `npm run test:watch` scripts added
 - 2026-03-07: Connected Deal Analyzer to property data -- accepts `?propertyId=` URL param; property detail page now has "Analyze This Deal" button; foreclosure amount maps to purchase price, county appraisal maps to ARV
 - 2026-03-07: Quick wins -- fixed updateNotes missing revalidatePath, replaced hardcoded color in deal-analyzer error.tsx with text-foreground token, added personalized "Welcome back, {FirstName}" dashboard heading

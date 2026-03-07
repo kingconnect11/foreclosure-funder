@@ -1,8 +1,32 @@
-export function StatCard({ label, value }: { label: string; value: string | number }) {
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
+
+interface StatCardProps {
+  label: string
+  value: number
+  trend?: 'up' | 'down' | 'neutral'
+  change?: string
+}
+
+export function StatCard({ label, value, trend, change }: StatCardProps) {
+  const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus
+  const trendColor = trend === 'up' ? 'text-success' : trend === 'down' ? 'text-danger' : 'text-ink-400'
+
   return (
-    <div className="bg-surface border border-border rounded p-5 hover:border-surface-elevated transition-colors flex flex-col items-center justify-center">
-      <span className="text-text-muted uppercase text-[12px] tracking-[0.05em] font-medium mb-2">{label}</span>
-      <span className="font-data text-[32px] leading-[1.1] text-text-primary">{value}</span>
+    <div className="zen-card p-5 lg:p-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="stat-label mb-1">{label}</p>
+          <p className="stat-value">{value.toLocaleString()}</p>
+        </div>
+        {trend && (
+          <div className={`flex items-center gap-1 ${trendColor}`}>
+            <TrendIcon className="w-4 h-4" />
+          </div>
+        )}
+      </div>
+      {change && (
+        <p className="text-xs text-ink-500 mt-2">{change}</p>
+      )}
     </div>
   )
 }

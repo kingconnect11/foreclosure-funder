@@ -1,28 +1,22 @@
 import type { Metadata } from 'next'
-import { Playfair_Display, DM_Sans, DM_Mono } from 'next/font/google'
+import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 
-const playfair = Playfair_Display({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-playfair',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter',
 })
 
-const dmSans = DM_Sans({
+const jetbrains = JetBrains_Mono({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
-  variable: '--font-dm-sans',
-})
-
-const dmMono = DM_Mono({
-  subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-dm-mono',
+  variable: '--font-jetbrains',
 })
 
 export const metadata: Metadata = {
   title: 'Foreclosure Funder',
-  description: 'Foreclosure property intelligence for real estate investors',
+  description: 'Intelligent foreclosure property investment platform',
 }
 
 export default function RootLayout({
@@ -32,7 +26,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${playfair.variable} ${dmSans.variable} ${dmMono.variable} font-body antialiased`}>
+      <body className={`${inter.variable} ${jetbrains.variable} font-body antialiased`}>
         {children}
       </body>
     </html>

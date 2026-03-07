@@ -1,4 +1,4 @@
-import { getCurrentUser, getDealRoom } from '@/lib/queries'
+import { getCurrentUser, getDashboardStats, getDealRoom } from '@/lib/queries'
 import { redirect } from 'next/navigation'
 import Nav from '@/components/nav'
 
@@ -10,13 +10,18 @@ export default async function MainLayout({
   const user = await getCurrentUser()
   if (!user) redirect('/login')
 
-  const dealRoom = user.deal_room_id ? await getDealRoom(user.deal_room_id) : null
+  const [stats, dealRoom] = await Promise.all([
+    getDashboardStats(user.id),
+    user.deal_room_id ? getDealRoom(user.deal_room_id) : Promise.resolve(null),
+  ])
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Nav user={user} dealRoom={dealRoom} />
-      <main className="flex-1 w-full max-w-[1440px] mx-auto px-6 py-8">
-        {children}
+    <div className="min-h-screen bg-background">
+      <Nav user={user} stats={stats} dealRoom={dealRoom} />
+      <main className="lg:ml-[280px] min-h-screen pt-16 lg:pt-0">
+        <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
+          {children}
+        </div>
       </main>
     </div>
   )

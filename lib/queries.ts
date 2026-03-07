@@ -3,12 +3,20 @@ import type {
   Property,
   Profile,
   InvestorPipeline,
+  InvestorPreferences,
   CourtResearch,
   DealRoom,
   PropertyStage,
   PipelineStage,
   PipelineStageHistory,
 } from '@/lib/types'
+import { calculateOwnedAnalytics } from '@/lib/owned/calculations'
+import type {
+  OwnedAnalytics,
+  OwnedChartId,
+  OwnedPropertyWithCosts,
+  OwnedPropertyStatus,
+} from '@/lib/owned/types'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -122,6 +130,18 @@ export async function getDashboardStats(
   userId: string
 ): Promise<DashboardStats> {
   const supabase = await createClient()
+  const supabaseAny = supabase as unknown as {
+    from: (table: string) => {
+      select: (
+        columns: string,
+        options?: { count?: 'exact'; head?: boolean }
+      ) => {
+        eq: (column: string, value: string) => {
+          is: (column: string, value: null) => Promise<{ count: number | null; error: Error | null }>
+        }
+      }
+    }
+  }
 
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
@@ -148,10 +168,11 @@ export async function getDashboardStats(
       .gte('created_at', sevenDaysAgoISO),
 
     // In pipeline for this user
-    supabase
+    supabaseAny
       .from('investor_pipeline')
       .select('*', { count: 'exact', head: true })
-      .eq('investor_id', userId),
+      .eq('investor_id', userId)
+      .is('moved_to_owned_at', null),
   ])
 
   if (totalActiveRes.error) throw totalActiveRes.error
@@ -254,15 +275,144 @@ export async function getUserPipeline(
   userId: string
 ): Promise<PipelineEntryWithProperty[]> {
   const supabase = await createClient()
+  const supabaseAny = supabase as unknown as {
+    from: (table: string) => {
+      select: (columns: string) => {
+        eq: (column: string, value: string) => {
+          is: (column: string, value: null) => {
+            order: (
+              column: string,
+              options: { ascending: boolean }
+            ) => Promise<{ data: unknown; error: Error | null }>
+          }
+        }
+      }
+    }
+  }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAny
     .from('investor_pipeline')
     .select('*, properties(*)')
     .eq('investor_id', userId)
+    .is('moved_to_owned_at', null)
     .order('updated_at', { ascending: false })
 
   if (error) throw error
   return (data ?? []) as PipelineEntryWithProperty[]
+}
+
+// ---------------------------------------------------------------------------
+// Owned Properties
+// ---------------------------------------------------------------------------
+
+export async function getOwnedProperties(
+  investorId: string,
+  filters: Pick<OwnedPropertyFilters, 'status' | 'search'> = {}
+): Promise<OwnedPropertyWithCosts[]> {
+  const supabase = await createClient()
+  const supabaseAny = supabase as unknown as {
+    from: (table: string) => any
+  }
+
+  let query = supabaseAny
+    .from('owned_properties')
+    .select('*, owned_property_cost_items(*)')
+    .eq('investor_id', investorId)
+
+  if (filters.status) {
+    query = query.eq('status', filters.status)
+  }
+
+  if (filters.search) {
+    query = query.or(`address.ilike.%${filters.search}%,city.ilike.%${filters.search}%`)
+  }
+
+  const { data, error } = await query
+    .order('acquired_at', { ascending: true })
+
+  if (error) throw error
+  return (data ?? []) as OwnedPropertyWithCosts[]
+}
+
+export interface OwnedPropertyFilters {
+  status?: OwnedPropertyStatus
+  search?: string
+  page?: number
+  pageSize?: number
+}
+
+export async function getOwnedPropertiesPage(
+  investorId: string,
+  filters: OwnedPropertyFilters = {}
+): Promise<{ properties: OwnedPropertyWithCosts[]; total: number; page: number; pageSize: number }> {
+  const supabase = await createClient()
+  const supabaseAny = supabase as unknown as {
+    from: (table: string) => any
+  }
+  const page = filters.page ?? 1
+  const pageSize = filters.pageSize ?? 12
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+
+  let query = supabaseAny
+    .from('owned_properties')
+    .select('*, owned_property_cost_items(*)', { count: 'exact' })
+    .eq('investor_id', investorId)
+
+  if (filters.status) {
+    query = query.eq('status', filters.status)
+  }
+
+  if (filters.search) {
+    query = query.or(`address.ilike.%${filters.search}%,city.ilike.%${filters.search}%`)
+  }
+
+  const { data, error, count } = await query
+    .order('acquired_at', { ascending: false })
+    .range(from, to)
+
+  if (error) throw error
+
+  return {
+    properties: (data ?? []) as OwnedPropertyWithCosts[],
+    total: count ?? 0,
+    page,
+    pageSize,
+  }
+}
+
+export async function getOwnedAnalytics(
+  investorId: string,
+  filters: Pick<OwnedPropertyFilters, 'status' | 'search'> = {}
+): Promise<OwnedAnalytics> {
+  const properties = await getOwnedProperties(investorId, filters)
+  return calculateOwnedAnalytics(properties)
+}
+
+export async function getOwnedChartPreferences(userId: string): Promise<OwnedChartId[]> {
+  const supabase = await createClient()
+  const supabaseAny = supabase as unknown as {
+    from: (table: string) => {
+      select: (columns: string) => {
+        eq: (column: string, value: string) => {
+          maybeSingle: () => Promise<{ data: { pinned_chart_ids: string[] | null } | null; error: Error | null }>
+        }
+      }
+    }
+  }
+
+  const { data, error } = await supabaseAny
+    .from('owned_chart_preferences')
+    .select('pinned_chart_ids')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (error) throw error
+
+  const valid: OwnedChartId[] = ['value_vs_cost', 'cost_category_mix', 'pl_breakdown']
+  return (data?.pinned_chart_ids ?? []).filter((id): id is OwnedChartId =>
+    valid.includes(id as OwnedChartId)
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -285,27 +435,110 @@ export async function getDealRoomInvestors(
   return data ?? []
 }
 
-export type DealRoomActivityEntry = InvestorPipeline & {
-  profiles: { full_name: string | null }
-  properties: { address: string | null; city: string | null }
+export async function getDealRoomMembers(
+  dealRoomId: string
+): Promise<Profile[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('deal_room_id', dealRoomId)
+    .order('full_name', { ascending: true })
+
+  if (error) throw error
+  return data ?? []
+}
+
+export interface DealRoomActivityEntry {
+  id: string
+  activity_type: 'pipeline' | 'portfolio'
+  stage: string | null
+  offer_amount: number | null
+  updated_at: string | null
+  profiles: { full_name: string | null } | null
+  properties: { address: string | null; city: string | null } | null
 }
 
 export async function getDealRoomActivity(
   dealRoomId: string
 ): Promise<DealRoomActivityEntry[]> {
   const supabase = await createClient()
+  const supabaseAny = supabase as unknown as {
+    from: (table: string) => any
+  }
 
-  const { data, error } = await supabase
+  const { data: members, error: membersError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('deal_room_id', dealRoomId)
+
+  if (membersError) throw membersError
+
+  const memberIds = (members ?? []).map((member) => member.id)
+  if (memberIds.length === 0) return []
+
+  const { data: pipelineData, error: pipelineError } = await supabase
     .from('investor_pipeline')
     .select(
       '*, profiles!investor_pipeline_investor_id_fkey(full_name), properties(address, city)'
     )
-    .eq('deal_room_id', dealRoomId)
+    .in('investor_id', memberIds)
     .order('updated_at', { ascending: false })
     .limit(50)
 
-  if (error) throw error
-  return (data ?? []) as DealRoomActivityEntry[]
+  if (pipelineError) throw pipelineError
+
+  const { data: portfolioData, error: portfolioError } = await supabaseAny
+    .from('owned_properties')
+    .select(
+      'id, address, city, updated_at, acquired_at, created_at, profiles!owned_properties_investor_id_fkey(full_name)'
+    )
+    .in('investor_id', memberIds)
+    .order('updated_at', { ascending: false })
+    .limit(50)
+
+  if (portfolioError) throw portfolioError
+
+  const pipelineEntries = (pipelineData ?? []).map((row: any) => ({
+    id: row.id,
+    activity_type: 'pipeline' as const,
+    stage: row.stage ?? null,
+    offer_amount: row.offer_amount ?? null,
+    updated_at: row.updated_at ?? null,
+    profiles: row.profiles
+      ? { full_name: row.profiles.full_name ?? null }
+      : { full_name: null },
+    properties: row.properties
+      ? {
+          address: row.properties.address ?? null,
+          city: row.properties.city ?? null,
+        }
+      : { address: null, city: null },
+  }))
+
+  const portfolioEntries = (portfolioData ?? []).map((row: any) => ({
+    id: `portfolio-${row.id}`,
+    activity_type: 'portfolio' as const,
+    stage: 'portfolio_added',
+    offer_amount: null,
+    updated_at: row.updated_at ?? row.acquired_at ?? row.created_at ?? null,
+    profiles: row.profiles
+      ? { full_name: row.profiles.full_name ?? null }
+      : { full_name: null },
+    properties: {
+      address: row.address ?? null,
+      city: row.city ?? null,
+    },
+  }))
+
+  return [...pipelineEntries, ...portfolioEntries]
+    .sort((a, b) => {
+      const aTime = a.updated_at ? new Date(a.updated_at).getTime() : 0
+      const bTime = b.updated_at ? new Date(b.updated_at).getTime() : 0
+      return bTime - aTime
+    })
+    .slice(0, 50)
 }
 
 export async function getInvestorPipelineSummary(
@@ -328,6 +561,21 @@ export async function getInvestorPipelineSummary(
   return summary
 }
 
+export async function getInvestorPortfolioCount(investorId: string): Promise<number> {
+  const supabase = await createClient()
+  const supabaseAny = supabase as unknown as {
+    from: (table: string) => any
+  }
+
+  const { count, error } = await supabaseAny
+    .from('owned_properties')
+    .select('id', { count: 'exact', head: true })
+    .eq('investor_id', investorId)
+
+  if (error) throw error
+  return count ?? 0
+}
+
 // ---------------------------------------------------------------------------
 // Pipeline Stage History
 // ---------------------------------------------------------------------------
@@ -341,6 +589,24 @@ export async function getStageHistory(pipelineId: string): Promise<PipelineStage
     .order('entered_at', { ascending: true })
   if (error) throw error
   return data ?? []
+}
+
+// ---------------------------------------------------------------------------
+// Onboarding
+// ---------------------------------------------------------------------------
+
+export async function getInvestorPreferences(
+  investorId: string
+): Promise<InvestorPreferences | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('investor_preferences')
+    .select('*')
+    .eq('investor_id', investorId)
+    .maybeSingle()
+
+  if (error) throw error
+  return data
 }
 
 // ---------------------------------------------------------------------------

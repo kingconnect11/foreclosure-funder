@@ -8,8 +8,10 @@ import {
   getStageHistory,
 } from '@/lib/queries'
 import { notFound } from 'next/navigation'
-import { StageBadge } from '@/components/stage-badge'
+import Link from 'next/link'
+import StageBadge from '@/components/stage-badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { Calculator } from 'lucide-react'
 import { StageProgress } from '@/components/stage-progress'
 import { PropertyNotes } from '@/components/property-notes'
 import { AdminGroupNotes } from '@/components/admin-group-notes'
@@ -28,15 +30,15 @@ export default async function PropertyDetailPage({
 
   const [courtResearch, pipelineEntry, watchingCount, dealRoom] =
     await Promise.all([
-      getCourtResearch(property.id),
-      getPipelineEntry(user.id, property.id),
-      getWatchingCount(property.id),
-      user.deal_room_id ? getDealRoom(user.deal_room_id) : null,
+      getCourtResearch(property.id).catch(() => null),
+      getPipelineEntry(user.id, property.id).catch(() => null),
+      getWatchingCount(property.id).catch(() => 0),
+      user.deal_room_id ? getDealRoom(user.deal_room_id).catch(() => null) : null,
     ])
 
   // Second pass — needs pipeline entry ID
   const stageHistory = pipelineEntry
-    ? await getStageHistory(pipelineEntry.id)
+    ? await getStageHistory(pipelineEntry.id).catch(() => [])
     : []
 
   const googleMapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
@@ -79,6 +81,14 @@ export default async function PropertyDetailPage({
             </div>
           </div>
         </section>
+
+        <Link
+          href={`/deal-analyzer?propertyId=${property.id}`}
+          className="btn-primary inline-flex items-center gap-2 self-start"
+        >
+          <Calculator className="w-4 h-4" />
+          Analyze This Deal
+        </Link>
 
         {googleMapsKey && property.address && property.city && property.state && property.zip_code && (
           <section className="flex flex-col gap-4">
@@ -165,7 +175,25 @@ export default async function PropertyDetailPage({
 
       {/* Right Column */}
       <div className="flex flex-col gap-6">
-        <StageProgress propertyId={property.id} pipelineEntry={pipelineEntry} stageHistory={stageHistory} />
+        <StageProgress
+          propertyId={property.id}
+          pipelineEntry={pipelineEntry}
+          stageHistory={stageHistory}
+          propertyPrefill={{
+            address: property.address ?? null,
+            city: property.city ?? null,
+            state: property.state ?? null,
+            zipCode: property.zip_code ?? null,
+            purchasePrice:
+              property.foreclosure_amount !== null && property.foreclosure_amount !== undefined
+                ? Number(property.foreclosure_amount)
+                : null,
+            currentValue:
+              property.county_appraisal !== null && property.county_appraisal !== undefined
+                ? Number(property.county_appraisal)
+                : null,
+          }}
+        />
 
         {watchingCount > 1 && (
           <div className="bg-surface border border-border rounded p-4 flex items-center justify-center gap-2 text-text-secondary text-sm">

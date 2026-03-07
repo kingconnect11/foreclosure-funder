@@ -28,10 +28,10 @@ export function AdminGroupNotes({ pipelineId, initialNotes }: { pipelineId: stri
     <div className="flex flex-col gap-2 mt-4">
       <div className="flex items-center justify-between">
         <h3 className="text-[20px] font-display text-accent">Admin: Group Notes</h3>
-        {saveStatus === 'saving' && <span className="text-xs text-text-muted">Saving...</span>}
+        {saveStatus === 'saving' && <span className="text-xs text-ink-500">Saving...</span>}
         {saveStatus === 'saved' && <span className="text-xs text-success">Saved ✓</span>}
       </div>
-      <p className="text-xs text-text-muted mb-1">These notes will be visible to investors in your deal room who have this property in their pipeline.</p>
+      <p className="text-xs text-ink-500 mb-1">These notes will be visible to investors in your deal room who have this property in their pipeline.</p>
       <textarea 
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
@@ -46,7 +46,7 @@ export function AdminGroupNotes({ pipelineId, initialNotes }: { pipelineId: stri
           }
         }}
         placeholder="Add group notes here..."
-        className="w-full h-32 bg-surface border border-accent/50 rounded p-3 text-sm text-text-primary focus:outline-none focus:border-accent resize-y"
+        className="w-full h-32 bg-surface border border-accent/50 rounded p-3 text-sm text-foreground focus:outline-none focus:border-accent resize-y"
       />
     </div>
   )

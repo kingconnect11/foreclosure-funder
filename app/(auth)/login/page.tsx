@@ -27,8 +27,9 @@ export default async function LoginPage({
               id="email"
               name="email"
               type="email"
+              autoComplete="email"
               required
-              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent"
+              className="w-full min-h-[44px] bg-background border border-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent"
             />
           </div>
           <div className="space-y-1">
@@ -39,20 +40,24 @@ export default async function LoginPage({
               id="password"
               name="password"
               type="password"
+              autoComplete="current-password"
               required
-              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent"
+              className="w-full min-h-[44px] bg-background border border-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent"
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-accent hover:bg-accent-hover text-[#0B1928] font-semibold text-sm rounded py-2.5 transition-colors mt-2"
+            className="w-full min-h-[44px] bg-accent hover:bg-accent-hover text-[#0B1928] font-semibold text-sm rounded py-2.5 transition-colors mt-2"
           >
             Sign In
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-text-secondary">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-accent hover:text-accent-hover transition-colors">
+          <Link
+            href="/signup"
+            className="inline-flex min-h-[44px] items-center px-2 -mx-2 text-accent hover:text-accent-hover transition-colors"
+          >
             Sign up
           </Link>
         </p>

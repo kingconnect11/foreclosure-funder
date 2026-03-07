@@ -2,7 +2,8 @@ import {
   getCurrentUser,
   getDealRoomInvestors,
   getDealRoomActivity,
-  getInvestorPipelineSummary
+  getInvestorPipelineSummary,
+  getInvestorPortfolioCount,
 } from '@/lib/queries'
 import { redirect } from 'next/navigation'
 import { AdminInvestorTable } from '@/components/admin-investor-table'
@@ -19,13 +20,15 @@ export default async function AdminPage() {
   ])
 
   // Fetch summaries for all investors
-  const summaries = await Promise.all(
-    investors.map(inv => getInvestorPipelineSummary(inv.id))
-  )
+  const [summaries, portfolioCounts] = await Promise.all([
+    Promise.all(investors.map(inv => getInvestorPipelineSummary(inv.id))),
+    Promise.all(investors.map(inv => getInvestorPortfolioCount(inv.id))),
+  ])
 
   const investorsWithSummary = investors.map((inv, idx) => ({
     ...inv,
-    summary: summaries[idx]
+    summary: summaries[idx],
+    portfolioCount: portfolioCounts[idx],
   }))
 
   return (

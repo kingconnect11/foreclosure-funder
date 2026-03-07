@@ -10,6 +10,7 @@ import type { DealInputs } from '@/lib/deal-analyzer/calculations'
 interface Props {
   inputs: DealInputs
   onChange: (updates: Partial<DealInputs>) => void
+  highlightedFields?: Array<keyof DealInputs>
 }
 
 const propertyTypes = [
@@ -21,8 +22,13 @@ const propertyTypes = [
   'Townhouse',
 ]
 
-export function PropertyInputSection({ inputs, onChange }: Props) {
+export function PropertyInputSection({
+  inputs,
+  onChange,
+  highlightedFields = [],
+}: Props) {
   const [selectedType, setSelectedType] = useState('Single Family')
+  const isHighlighted = (field: keyof DealInputs) => highlightedFields.includes(field)
 
   return (
     <motion.div
@@ -68,7 +74,7 @@ export function PropertyInputSection({ inputs, onChange }: Props) {
                 key={type}
                 onClick={() => setSelectedType(type)}
                 className={cn(
-                  'px-3 py-2 rounded-lg text-xs font-medium border transition-all',
+                  'px-3 py-2 min-h-[44px] rounded-lg text-xs font-medium border transition-all',
                   selectedType === type
                     ? 'border-accent/50 text-accent bg-accent-subtle'
                     : 'border-border text-ink-500 hover:border-accent/20 hover:text-accent'
@@ -94,6 +100,7 @@ export function PropertyInputSection({ inputs, onChange }: Props) {
             min={10000}
             max={500000}
             step={5000}
+            highlighted={isHighlighted('purchasePrice')}
           />
           <SliderInput
             label="After Repair Value (ARV)"
@@ -102,6 +109,7 @@ export function PropertyInputSection({ inputs, onChange }: Props) {
             min={20000}
             max={800000}
             step={5000}
+            highlighted={isHighlighted('arv')}
           />
           <SliderInput
             label="Loan Amount"
@@ -110,6 +118,7 @@ export function PropertyInputSection({ inputs, onChange }: Props) {
             min={0}
             max={500000}
             step={5000}
+            highlighted={isHighlighted('loanAmount')}
           />
           <SliderInput
             label="Interest Rate"
@@ -119,6 +128,7 @@ export function PropertyInputSection({ inputs, onChange }: Props) {
             max={18}
             step={0.25}
             format="percent"
+            highlighted={isHighlighted('interestRate')}
           />
         </div>
       </div>

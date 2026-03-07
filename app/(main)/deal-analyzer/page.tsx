@@ -1,34 +1,60 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  ArrowLeftRight,
   Building2,
   HandCoins,
   Hammer,
   Calculator,
+  Sparkles,
+  AlertTriangle,
+  CheckCircle2,
+  ShieldAlert,
 } from 'lucide-react'
 import { PropertyInputSection } from '@/components/deal-analyzer/PropertyInputSection'
 import { CostBuilderSection } from '@/components/deal-analyzer/CostBuilderSection'
 import { FlipAnalysisCard } from '@/components/deal-analyzer/FlipAnalysisCard'
 import { RentalAnalysisCard } from '@/components/deal-analyzer/RentalAnalysisCard'
 import { WholesaleAnalysisCard } from '@/components/deal-analyzer/WholesaleAnalysisCard'
+import { GuidedInsightsPanel } from '@/components/deal-analyzer/GuidedInsightsPanel'
 import {
   calculateFlip,
   calculateRental,
   calculateWholesale,
   type DealInputs,
 } from '@/lib/deal-analyzer/calculations'
+import { getDealInsights, type InsightAction } from '@/lib/deal-analyzer/insights'
 import { cn, formatCurrency } from '@/lib/utils'
 
 type AnalysisTab = 'flip' | 'rental' | 'wholesale'
+type InsightFilter = 'all' | AnalysisTab | 'cross'
+type DealInputKey = keyof DealInputs
 
 const tabs: { id: AnalysisTab; label: string; icon: typeof Hammer }[] = [
   { id: 'flip', label: 'Flip', icon: Hammer },
   { id: 'rental', label: 'Rental', icon: Building2 },
   { id: 'wholesale', label: 'Wholesale', icon: HandCoins },
 ]
+
+const inputBounds: Record<DealInputKey, { min: number; max: number }> = {
+  purchasePrice: { min: 10000, max: 500000 },
+  arv: { min: 20000, max: 800000 },
+  rehabCost: { min: 0, max: 150000 },
+  holdingMonths: { min: 1, max: 24 },
+  monthlyTaxes: { min: 0, max: 1000 },
+  monthlyInsurance: { min: 0, max: 500 },
+  monthlyUtilities: { min: 0, max: 500 },
+  closingCostPercent: { min: 0, max: 8 },
+  sellingCostPercent: { min: 0, max: 10 },
+  loanAmount: { min: 0, max: 500000 },
+  interestRate: { min: 0, max: 18 },
+  monthlyRent: { min: 400, max: 5000 },
+  vacancyRate: { min: 0, max: 20 },
+  monthlyMaintenance: { min: 0, max: 500 },
+  propertyManagementPercent: { min: 0, max: 15 },
+  wholesaleFee: { min: 1000, max: 30000 },
+}
 
 const defaultInputs: DealInputs = {
   purchasePrice: 85000,
@@ -52,6 +78,9 @@ const defaultInputs: DealInputs = {
 export default function DealAnalyzerPage() {
   const [inputs, setInputs] = useState<DealInputs>(defaultInputs)
   const [activeTab, setActiveTab] = useState<AnalysisTab>('flip')
+  const [insightFilter, setInsightFilter] = useState<InsightFilter>('all')
+  const [highlightedFields, setHighlightedFields] = useState<DealInputKey[]>([])
+  const [undoPatch, setUndoPatch] = useState<Partial<DealInputs> | null>(null)
 
   const handleChange = (updates: Partial<DealInputs>) => {
     setInputs((prev) => ({ ...prev, ...updates }))
@@ -60,99 +89,261 @@ export default function DealAnalyzerPage() {
   const flipAnalysis = useMemo(() => calculateFlip(inputs), [inputs])
   const rentalAnalysis = useMemo(() => calculateRental(inputs), [inputs])
   const wholesaleAnalysis = useMemo(() => calculateWholesale(inputs), [inputs])
+  const insights = useMemo(
+    () =>
+      getDealInsights({
+        inputs,
+        flip: flipAnalysis,
+        rental: rentalAnalysis,
+        wholesale: wholesaleAnalysis,
+      }),
+    [inputs, flipAnalysis, rentalAnalysis, wholesaleAnalysis]
+  )
+
+  const filteredInsights = useMemo(
+    () =>
+      insightFilter === 'all'
+        ? insights
+        : insights.filter((insight) => insight.strategy === insightFilter),
+    [insightFilter, insights]
+  )
+
+  const health = useMemo(
+    () =>
+      insights.reduce(
+        (acc, insight) => {
+          acc[insight.severity] += 1
+          return acc
+        },
+        { risk: 0, caution: 0, good: 0 }
+      ),
+    [insights]
+  )
+
+  const clampInputValue = (field: DealInputKey, value: number) => {
+    const bounds = inputBounds[field]
+    return Math.min(bounds.max, Math.max(bounds.min, value))
+  }
+
+  const handleApplyAction = (action: InsightAction) => {
+    const fields = Object.keys(action.updates) as DealInputKey[]
+    if (fields.length === 0) return
+
+    const previousValues: Partial<DealInputs> = {}
+    const nextInputs = { ...inputs }
+
+    fields.forEach((field) => {
+      const update = action.updates[field]
+      previousValues[field] = inputs[field]
+      if (typeof update === 'number') {
+        nextInputs[field] = clampInputValue(field, update)
+      }
+    })
+
+    setUndoPatch(previousValues)
+    setInputs(nextInputs)
+    setHighlightedFields(fields)
+  }
+
+  const handleUndoLast = () => {
+    if (!undoPatch) return
+
+    const fields = Object.keys(undoPatch) as DealInputKey[]
+    if (fields.length === 0) return
+
+    const nextInputs = { ...inputs }
+    fields.forEach((field) => {
+      const previous = undoPatch[field]
+      if (typeof previous === 'number') {
+        nextInputs[field] = previous
+      }
+    })
+
+    setInputs(nextInputs)
+    setHighlightedFields(fields)
+    setUndoPatch(null)
+  }
+
+  useEffect(() => {
+    if (highlightedFields.length === 0) return
+    const timer = window.setTimeout(() => setHighlightedFields([]), 1200)
+    return () => window.clearTimeout(timer)
+  }, [highlightedFields])
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-            <Calculator className="w-5 h-5 text-white" />
+      <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-surface via-rice-50 to-accent/10 p-6 shadow-zen">
+        <div className="absolute -top-10 -right-10 h-36 w-36 rounded-full bg-accent/10 blur-2xl" />
+        <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-info/10 blur-2xl" />
+
+        <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-3 py-1.5 text-2xs font-semibold uppercase tracking-[0.08em] text-accent">
+              <Sparkles className="h-3.5 w-3.5" />
+              Investment Playground
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-xl bg-accent text-white flex items-center justify-center shadow-zen-lg">
+                <Calculator className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-[30px] leading-tight font-display font-bold text-foreground">
+                  Deal Analyzer
+                </h1>
+                <p className="text-sm text-ink-600">
+                  Model flips, rentals, and wholesale exits with guided strategy feedback.
+                </p>
+              </div>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">
-              Deal Analyzer
-            </h1>
-            <p className="text-sm text-ink-500">
-              Run the numbers on any foreclosure deal
-            </p>
+
+          <div className="grid grid-cols-3 gap-3 rounded-xl border border-border bg-surface/80 p-3 shadow-zen">
+            <div className="rounded-lg bg-rice-50 px-3 py-2 text-center">
+              <div className="text-2xs uppercase tracking-[0.08em] text-ink-500">Buy</div>
+              <div className="font-mono text-sm font-semibold text-foreground">
+                {formatCurrency(inputs.purchasePrice)}
+              </div>
+            </div>
+            <div className="rounded-lg bg-rice-50 px-3 py-2 text-center">
+              <div className="text-2xs uppercase tracking-[0.08em] text-ink-500">ARV</div>
+              <div className="font-mono text-sm font-semibold text-accent">
+                {formatCurrency(inputs.arv)}
+              </div>
+            </div>
+            <div className="rounded-lg bg-rice-50 px-3 py-2 text-center">
+              <div className="text-2xs uppercase tracking-[0.08em] text-ink-500">Spread</div>
+              <div
+                className={cn(
+                  'font-mono text-sm font-semibold',
+                  inputs.arv - inputs.purchasePrice - inputs.rehabCost >= 0
+                    ? 'text-success'
+                    : 'text-danger'
+                )}
+              >
+                {formatCurrency(inputs.arv - inputs.purchasePrice - inputs.rehabCost)}
+              </div>
+            </div>
           </div>
         </div>
+      </section>
 
-        {/* Quick summary pill */}
-        <div className="hidden md:flex items-center gap-4 px-5 py-2.5 zen-card">
-          <div className="text-center">
-            <div className="text-2xs text-ink-400 uppercase font-semibold">Buy</div>
-            <div className="font-mono text-xs font-semibold text-foreground">
-              {formatCurrency(inputs.purchasePrice)}
-            </div>
+      <div className="rounded-2xl border border-border bg-surface p-4 shadow-zen">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.07em] text-ink-500">
+              Deal Health
+            </p>
+            <p className="text-sm text-foreground">
+              {health.risk > 0
+                ? 'High-risk assumptions detected'
+                : health.caution > 0
+                  ? 'Promising, but needs tuning'
+                  : 'Strong setup across current assumptions'}
+            </p>
           </div>
-          <ArrowLeftRight className="w-3.5 h-3.5 text-ink-300" />
-          <div className="text-center">
-            <div className="text-2xs text-ink-400 uppercase font-semibold">ARV</div>
-            <div className="font-mono text-xs font-semibold text-accent">
-              {formatCurrency(inputs.arv)}
-            </div>
-          </div>
-          <ArrowLeftRight className="w-3.5 h-3.5 text-ink-300" />
-          <div className="text-center">
-            <div className="text-2xs text-ink-400 uppercase font-semibold">Spread</div>
-            <div
-              className={cn(
-                'font-mono text-xs font-semibold',
-                inputs.arv - inputs.purchasePrice - inputs.rehabCost >= 0
-                  ? 'text-success'
-                  : 'text-danger'
-              )}
-            >
-              {formatCurrency(inputs.arv - inputs.purchasePrice - inputs.rehabCost)}
-            </div>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-danger/20 bg-danger/10 px-2.5 py-1 text-danger">
+              <ShieldAlert className="h-3.5 w-3.5" />
+              {health.risk} Risk
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-warning/20 bg-warning/10 px-2.5 py-1 text-warning-dark">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {health.caution} Caution
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-success/20 bg-success/10 px-2.5 py-1 text-success">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {health.good} Good
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Main content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Inputs */}
         <div className="lg:col-span-5 space-y-6">
-          <PropertyInputSection inputs={inputs} onChange={handleChange} />
-          <CostBuilderSection inputs={inputs} onChange={handleChange} />
+          <PropertyInputSection
+            inputs={inputs}
+            onChange={handleChange}
+            highlightedFields={highlightedFields}
+          />
+          <CostBuilderSection
+            inputs={inputs}
+            onChange={handleChange}
+            highlightedFields={highlightedFields}
+          />
         </div>
 
-        {/* Right: Analysis */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Tab selector */}
-          <div className="zen-card p-1.5 flex gap-1">
-            {tabs.map((tab) => {
-              const isActive = activeTab === tab.id
-              const Icon = tab.icon
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    'relative flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all',
-                    isActive
-                      ? 'text-accent'
-                      : 'text-ink-500 hover:text-ink-700'
-                  )}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-accent-subtle border border-accent/20 rounded-lg"
-                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    />
-                  )}
-                  <Icon className="w-4 h-4 relative z-10" />
-                  <span className="relative z-10 font-display">{tab.label}</span>
-                </button>
-              )
-            })}
+          <div className="rounded-2xl border border-border bg-surface p-2 shadow-zen">
+            <div className="grid grid-cols-3 gap-1.5">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id
+                const Icon = tab.icon
+
+                const metric =
+                  tab.id === 'flip'
+                    ? {
+                        label: 'Net Profit',
+                        value: formatCurrency(flipAnalysis.netProfit),
+                        tone: flipAnalysis.netProfit >= 0 ? 'text-success' : 'text-danger',
+                      }
+                    : tab.id === 'rental'
+                      ? {
+                          label: 'Cash Flow',
+                          value: `${formatCurrency(rentalAnalysis.monthlyCashFlow)}/mo`,
+                          tone:
+                            rentalAnalysis.monthlyCashFlow >= 0
+                              ? 'text-success'
+                              : 'text-danger',
+                        }
+                      : {
+                          label: 'Assignment',
+                          value: formatCurrency(wholesaleAnalysis.assignmentFee),
+                          tone: 'text-accent',
+                        }
+
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={cn(
+                      'relative rounded-xl px-3 py-3.5 min-h-[74px] text-left transition-all',
+                      isActive
+                        ? 'bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 shadow-zen'
+                        : 'bg-rice-50/70 border border-transparent hover:border-border'
+                    )}
+                  >
+                    <div className="relative z-10 flex items-start justify-between gap-2">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                          <Icon className="h-4 w-4" />
+                          <span>{tab.label}</span>
+                        </div>
+                        <div className="text-2xs uppercase tracking-[0.07em] text-ink-500">
+                          {metric.label}
+                        </div>
+                        <div className={cn('font-mono text-sm font-semibold', metric.tone)}>
+                          {metric.value}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
-          {/* Analysis cards */}
-          <div className="zen-card p-6">
+          <GuidedInsightsPanel
+            insights={filteredInsights}
+            filter={insightFilter}
+            onFilterChange={setInsightFilter}
+            onApplyAction={handleApplyAction}
+            onUndo={handleUndoLast}
+            canUndo={Boolean(undoPatch)}
+          />
+
+          <div className="rounded-2xl border border-border bg-surface p-6 shadow-zen">
             <AnimatePresence mode="wait">
               {activeTab === 'flip' && (
                 <motion.div
@@ -177,6 +368,7 @@ export default function DealAnalyzerPage() {
                     analysis={rentalAnalysis}
                     inputs={inputs}
                     onChange={handleChange}
+                    highlightedFields={highlightedFields}
                   />
                 </motion.div>
               )}
@@ -192,28 +384,36 @@ export default function DealAnalyzerPage() {
                     analysis={wholesaleAnalysis}
                     inputs={inputs}
                     onChange={handleChange}
+                    highlightedFields={highlightedFields}
                   />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Strategy comparison */}
-          <div className="zen-card p-5">
+          <div className="rounded-2xl border border-border bg-surface p-5 shadow-zen">
             <h3 className="text-sm font-display font-semibold text-foreground mb-4">
               Strategy Comparison
             </h3>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
                 onClick={() => setActiveTab('flip')}
                 className={cn(
-                  'bg-rice-50 border rounded-xl p-4 text-center transition-all',
-                  activeTab === 'flip' ? 'border-accent/30 shadow-zen-lg' : 'border-border hover:border-border-strong'
+                  'relative overflow-hidden bg-rice-50 border rounded-xl p-4 text-center transition-all',
+                  activeTab === 'flip'
+                    ? 'border-accent/30 shadow-zen-lg'
+                    : 'border-border hover:border-border-strong'
                 )}
               >
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-success/70 to-success/20" />
                 <Hammer className="w-5 h-5 text-accent mx-auto mb-2" />
                 <div className="text-xs text-ink-500 mb-1">Flip Profit</div>
-                <div className={cn('font-mono text-lg font-bold', flipAnalysis.netProfit >= 0 ? 'text-success' : 'text-danger')}>
+                <div
+                  className={cn(
+                    'font-mono text-lg font-bold',
+                    flipAnalysis.netProfit >= 0 ? 'text-success' : 'text-danger'
+                  )}
+                >
                   {formatCurrency(flipAnalysis.netProfit)}
                 </div>
                 <div className="text-2xs text-ink-400 mt-1 font-mono">
@@ -224,13 +424,21 @@ export default function DealAnalyzerPage() {
               <button
                 onClick={() => setActiveTab('rental')}
                 className={cn(
-                  'bg-rice-50 border rounded-xl p-4 text-center transition-all',
-                  activeTab === 'rental' ? 'border-accent/30 shadow-zen-lg' : 'border-border hover:border-border-strong'
+                  'relative overflow-hidden bg-rice-50 border rounded-xl p-4 text-center transition-all',
+                  activeTab === 'rental'
+                    ? 'border-accent/30 shadow-zen-lg'
+                    : 'border-border hover:border-border-strong'
                 )}
               >
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-info/70 to-info/20" />
                 <Building2 className="w-5 h-5 text-info mx-auto mb-2" />
                 <div className="text-xs text-ink-500 mb-1">Monthly Cash Flow</div>
-                <div className={cn('font-mono text-lg font-bold', rentalAnalysis.monthlyCashFlow >= 0 ? 'text-success' : 'text-danger')}>
+                <div
+                  className={cn(
+                    'font-mono text-lg font-bold',
+                    rentalAnalysis.monthlyCashFlow >= 0 ? 'text-success' : 'text-danger'
+                  )}
+                >
                   {formatCurrency(rentalAnalysis.monthlyCashFlow)}
                 </div>
                 <div className="text-2xs text-ink-400 mt-1 font-mono">
@@ -241,10 +449,13 @@ export default function DealAnalyzerPage() {
               <button
                 onClick={() => setActiveTab('wholesale')}
                 className={cn(
-                  'bg-rice-50 border rounded-xl p-4 text-center transition-all',
-                  activeTab === 'wholesale' ? 'border-accent/30 shadow-zen-lg' : 'border-border hover:border-border-strong'
+                  'relative overflow-hidden bg-rice-50 border rounded-xl p-4 text-center transition-all',
+                  activeTab === 'wholesale'
+                    ? 'border-accent/30 shadow-zen-lg'
+                    : 'border-border hover:border-border-strong'
                 )}
               >
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo/80 to-indigo/30" />
                 <HandCoins className="w-5 h-5 text-indigo mx-auto mb-2" />
                 <div className="text-xs text-ink-500 mb-1">Assignment Fee</div>
                 <div className="font-mono text-lg font-bold text-accent">
@@ -259,7 +470,6 @@ export default function DealAnalyzerPage() {
         </div>
       </div>
 
-      {/* Disclaimer */}
       <p className="text-xs text-ink-400 text-center pt-4">
         For estimation purposes only. Not financial advice.
       </p>

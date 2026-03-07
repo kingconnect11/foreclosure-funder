@@ -9,6 +9,7 @@ import type { DealInputs } from '@/lib/deal-analyzer/calculations'
 interface Props {
   inputs: DealInputs
   onChange: (updates: Partial<DealInputs>) => void
+  highlightedFields?: Array<keyof DealInputs>
 }
 
 const rehabPresets = [
@@ -18,7 +19,13 @@ const rehabPresets = [
   { label: 'Heavy', cost: 75000, desc: 'Structural + full gut' },
 ]
 
-export function CostBuilderSection({ inputs, onChange }: Props) {
+export function CostBuilderSection({
+  inputs,
+  onChange,
+  highlightedFields = [],
+}: Props) {
+  const isHighlighted = (field: keyof DealInputs) => highlightedFields.includes(field)
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -79,6 +86,7 @@ export function CostBuilderSection({ inputs, onChange }: Props) {
           min={0}
           max={150000}
           step={1000}
+          highlighted={isHighlighted('rehabCost')}
         />
 
         <SliderInput
@@ -89,6 +97,7 @@ export function CostBuilderSection({ inputs, onChange }: Props) {
           max={24}
           step={1}
           format="months"
+          highlighted={isHighlighted('holdingMonths')}
         />
 
         {/* Monthly holding costs */}
@@ -105,6 +114,7 @@ export function CostBuilderSection({ inputs, onChange }: Props) {
               min={0}
               max={1000}
               step={25}
+              highlighted={isHighlighted('monthlyTaxes')}
             />
             <SliderInput
               label="Insurance"
@@ -113,6 +123,7 @@ export function CostBuilderSection({ inputs, onChange }: Props) {
               min={0}
               max={500}
               step={10}
+              highlighted={isHighlighted('monthlyInsurance')}
             />
             <SliderInput
               label="Utilities"
@@ -121,6 +132,7 @@ export function CostBuilderSection({ inputs, onChange }: Props) {
               min={0}
               max={500}
               step={10}
+              highlighted={isHighlighted('monthlyUtilities')}
             />
             <SliderInput
               label="Maintenance"
@@ -129,6 +141,7 @@ export function CostBuilderSection({ inputs, onChange }: Props) {
               min={0}
               max={500}
               step={10}
+              highlighted={isHighlighted('monthlyMaintenance')}
             />
           </div>
         </div>
@@ -143,6 +156,7 @@ export function CostBuilderSection({ inputs, onChange }: Props) {
             max={8}
             step={0.25}
             format="percent"
+            highlighted={isHighlighted('closingCostPercent')}
           />
           <SliderInput
             label="Selling Costs"
@@ -152,6 +166,7 @@ export function CostBuilderSection({ inputs, onChange }: Props) {
             max={10}
             step={0.25}
             format="percent"
+            highlighted={isHighlighted('sellingCostPercent')}
           />
         </div>
       </div>

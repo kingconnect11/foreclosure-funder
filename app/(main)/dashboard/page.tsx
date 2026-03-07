@@ -10,6 +10,7 @@ import { StatCard } from '@/components/stat-card'
 import { FilterBar } from '@/components/filter-bar'
 import { PropertyCard } from '@/components/property-card'
 import Link from 'next/link'
+import { ChevronLeft, ChevronRight, SearchX } from 'lucide-react'
 
 function FilterBarSkeleton() {
   return (
@@ -54,6 +55,9 @@ export default async function DashboardPage({
 
   const totalPages = Math.ceil(total / 30)
   const currentPage = params.page ? parseInt(params.page) : 1
+  const hasActiveFilters = Boolean(
+    params.stage || params.city || params.sort || params.search
+  )
 
   const getPageUrl = (page: number) => {
     const p = new URLSearchParams()
@@ -91,37 +95,63 @@ export default async function DashboardPage({
       </div>
 
       {properties.length === 0 && (
-        <div className="text-center text-text-muted py-12">
-          No properties found matching your filters.
+        <div className="zen-card py-12 px-6 text-center flex flex-col items-center gap-3 mb-8">
+          <div className="w-12 h-12 rounded-full bg-rice-100 flex items-center justify-center">
+            <SearchX className="w-6 h-6 text-ink-500" />
+          </div>
+          <p className="text-text-muted">
+            No properties found matching your filters.
+          </p>
+          {hasActiveFilters && (
+            <Link href="/dashboard" className="btn-secondary text-sm">
+              Clear Filters
+            </Link>
+          )}
         </div>
       )}
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 py-8">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 py-8">
           {currentPage > 1 ? (
             <Link 
               href={getPageUrl(currentPage - 1)}
-              className="px-4 py-2 border border-border text-text-secondary hover:text-text-primary rounded text-sm"
+              className="px-3 sm:px-4 py-2 min-h-[44px] border border-border text-text-secondary hover:text-text-primary rounded text-sm inline-flex items-center justify-center gap-1.5 min-w-[44px]"
+              aria-label="Previous page"
             >
-              Previous
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Previous</span>
             </Link>
           ) : (
-            <div className="px-4 py-2 border border-border text-border rounded text-sm cursor-not-allowed">Previous</div>
+            <div
+              className="px-3 sm:px-4 py-2 min-h-[44px] border border-border text-border rounded text-sm cursor-not-allowed inline-flex items-center justify-center gap-1.5 min-w-[44px]"
+              aria-hidden="true"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Previous</span>
+            </div>
           )}
           
-          <span className="text-sm text-text-secondary">
+          <span className="hidden sm:inline text-sm text-text-secondary">
             Page {currentPage} of {totalPages}
           </span>
           
           {currentPage < totalPages ? (
             <Link 
               href={getPageUrl(currentPage + 1)}
-              className="px-4 py-2 border border-border text-text-secondary hover:text-text-primary rounded text-sm"
+              className="px-3 sm:px-4 py-2 min-h-[44px] border border-border text-text-secondary hover:text-text-primary rounded text-sm inline-flex items-center justify-center gap-1.5 min-w-[44px]"
+              aria-label="Next page"
             >
-              Next
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="w-4 h-4" />
             </Link>
           ) : (
-            <div className="px-4 py-2 border border-border text-border rounded text-sm cursor-not-allowed">Next</div>
+            <div
+              className="px-3 sm:px-4 py-2 min-h-[44px] border border-border text-border rounded text-sm cursor-not-allowed inline-flex items-center justify-center gap-1.5 min-w-[44px]"
+              aria-hidden="true"
+            >
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="w-4 h-4" />
+            </div>
           )}
         </div>
       )}

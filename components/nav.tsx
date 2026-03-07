@@ -120,7 +120,7 @@ export default function Nav({
               placeholder="Search properties..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-rice-50 border border-border rounded-lg text-sm
+              className="w-full pl-10 pr-4 py-2.5 min-h-[44px] bg-rice-50 border border-border rounded-lg text-sm
                          placeholder:text-ink-400 focus:outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/10
                          transition-all"
             />
@@ -196,7 +196,7 @@ export default function Nav({
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-surface border-b border-border z-50">
         <div className="flex items-center justify-between h-full px-4">
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2 min-w-0 min-h-[44px] py-2">
             {dealRoom?.brand_logo_url ? (
               <Image
                 src={dealRoom.brand_logo_url}
@@ -210,7 +210,7 @@ export default function Nav({
                 <div className="w-7 h-7 bg-accent rounded-md flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-white" />
                 </div>
-                <span className="font-display font-bold text-foreground">
+                <span className="font-display font-bold text-foreground truncate max-w-[calc(100vw-120px)]">
                   {dealRoom?.name ?? 'Foreclosure Funder'}
                 </span>
               </>
@@ -218,7 +218,7 @@ export default function Nav({
           </Link>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 -mr-2 text-ink-600 hover:text-foreground"
+            className="h-11 w-11 -mr-2 flex items-center justify-center text-ink-600 hover:text-foreground"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -227,7 +227,7 @@ export default function Nav({
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 top-16 bg-background z-40 p-4 space-y-4 animate-fade-in">
+        <div className="lg:hidden fixed inset-0 top-16 bg-background z-40 p-4 space-y-4 animate-fade-in overflow-y-auto pb-8">
           {/* Mobile Search */}
           <form onSubmit={handleSearch} className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" />
@@ -236,18 +236,18 @@ export default function Nav({
               placeholder="Search properties..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-surface border border-border rounded-lg text-sm
+              className="w-full pl-10 pr-4 py-3 min-h-[44px] bg-surface border border-border rounded-lg text-sm
                          placeholder:text-ink-400 focus:outline-none focus:border-accent/50"
             />
           </form>
 
           {/* Mobile Activity Summary */}
-          <div className="zen-card p-4 flex items-center justify-between">
+          <div className="zen-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-ink-500" />
               <span className="text-sm text-ink-600">Activity</span>
             </div>
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-3 text-sm">
               <span className="font-mono text-warning">{stats.auctionScheduled} auctions</span>
               <span className="font-mono text-accent">{stats.inPipeline} tracked</span>
             </div>

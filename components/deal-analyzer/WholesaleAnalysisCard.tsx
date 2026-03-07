@@ -11,9 +11,17 @@ interface Props {
   analysis: WholesaleAnalysis
   inputs: DealInputs
   onChange: (updates: Partial<DealInputs>) => void
+  highlightedFields?: Array<keyof DealInputs>
 }
 
-export function WholesaleAnalysisCard({ analysis, inputs, onChange }: Props) {
+export function WholesaleAnalysisCard({
+  analysis,
+  inputs,
+  onChange,
+  highlightedFields = [],
+}: Props) {
+  const isHighlighted = (field: keyof DealInputs) => highlightedFields.includes(field)
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -44,14 +52,20 @@ export function WholesaleAnalysisCard({ analysis, inputs, onChange }: Props) {
           min={1000}
           max={30000}
           step={500}
+          highlighted={isHighlighted('wholesaleFee')}
         />
       </div>
 
       {/* Deal stack */}
       <div className="bg-rice-50 border border-border rounded-xl p-5 space-y-4">
-        <h3 className="text-sm font-display font-semibold text-foreground">
-          Deal Stack
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-display font-semibold text-foreground">
+            Deal Stack
+          </h3>
+          <span className="text-2xs font-semibold uppercase tracking-[0.08em] text-ink-500">
+            ARV Anchor
+          </span>
+        </div>
         <div className="space-y-3">
           {[
             { label: 'After Repair Value', value: inputs.arv, pct: 100, color: 'from-emerald-500 to-emerald-300', textColor: 'text-success' },
@@ -62,9 +76,7 @@ export function WholesaleAnalysisCard({ analysis, inputs, onChange }: Props) {
             <div key={item.label}>
               <div className="flex justify-between text-xs mb-1.5">
                 <span className="text-ink-500">{item.label}</span>
-                <span className={`font-mono ${item.textColor}`}>
-                  {formatCurrency(item.value)}
-                </span>
+                <span className={`font-mono ${item.textColor}`}>{formatCurrency(item.value)}</span>
               </div>
               <div className="h-7 rounded-lg bg-rice-200 overflow-hidden">
                 <motion.div
@@ -73,6 +85,9 @@ export function WholesaleAnalysisCard({ analysis, inputs, onChange }: Props) {
                   animate={{ width: `${item.pct}%` }}
                   transition={{ duration: 0.6, ease: 'easeOut', delay: i * 0.1 }}
                 />
+              </div>
+              <div className="mt-1 text-right text-2xs font-mono text-ink-400">
+                {item.pct.toFixed(1)}% of ARV
               </div>
             </div>
           ))}

@@ -7,6 +7,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  CartesianGrid,
   ResponsiveContainer,
   Cell,
 } from 'recharts'
@@ -27,6 +28,7 @@ export function FlipAnalysisCard({ analysis }: Props) {
     { name: 'Selling', value: analysis.sellingCosts, color: '#E74C3C' },
     { name: 'Net Profit', value: Math.max(0, analysis.netProfit), color: '#27AE60' },
   ]
+  const legendItems = breakdownData.filter((item) => item.value > 0)
 
   return (
     <motion.div
@@ -91,45 +93,74 @@ export function FlipAnalysisCard({ analysis }: Props) {
       </div>
 
       {/* Cost breakdown chart */}
-      <div className="bg-rice-50 border border-border rounded-xl p-5">
-        <h3 className="text-sm font-display font-semibold text-foreground mb-4">
-          Cost Breakdown
-        </h3>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={breakdownData} layout="vertical">
-            <XAxis
-              type="number"
-              tick={{ fill: '#6C757D', fontSize: 10 }}
-              tickFormatter={(v) => formatCurrency(v) ?? ''}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              type="category"
-              dataKey="name"
-              tick={{ fill: '#495057', fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-              width={70}
-            />
-            <Tooltip
-              formatter={(value) => formatCurrency(value as number)}
-              contentStyle={{
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #E8E8E0',
-                borderRadius: '12px',
-                fontSize: '12px',
-                color: '#1A1D20',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)',
-              }}
-            />
-            <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={24}>
-              {breakdownData.map((entry, index) => (
-                <Cell key={index} fill={entry.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="bg-rice-50 border border-border rounded-xl p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-display font-semibold text-foreground">
+            Cost Breakdown
+          </h3>
+          <span className="text-2xs font-semibold uppercase tracking-[0.08em] text-ink-500">
+            Total Basis {formatCurrency(analysis.totalCostBasis)}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {legendItems.map((item) => (
+            <div
+              key={item.name}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-2xs font-medium text-ink-600"
+            >
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+              {item.name}
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-lg bg-surface border border-border p-3">
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={breakdownData} layout="vertical" margin={{ left: 6, right: 8 }}>
+              <defs>
+                <linearGradient id="flipChartBackdrop" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="100%" stopColor="#FAFAF8" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E8E8E0" />
+              <XAxis
+                type="number"
+                tick={{ fill: '#6C757D', fontSize: 10 }}
+                tickFormatter={(v) => formatCurrency(v) ?? ''}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                type="category"
+                dataKey="name"
+                tick={{ fill: '#495057', fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                width={72}
+              />
+              <Tooltip
+                formatter={(value) => formatCurrency(value as number)}
+                cursor={{ fill: 'rgba(231, 76, 60, 0.08)' }}
+                contentStyle={{
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #E8E8E0',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  color: '#1A1D20',
+                  boxShadow: '0 6px 14px -6px rgb(0 0 0 / 0.18)',
+                }}
+                labelStyle={{ color: '#6C757D', fontSize: '11px', fontWeight: 600 }}
+              />
+              <Bar dataKey="value" radius={[0, 7, 7, 0]} barSize={20}>
+                {breakdownData.map((entry, index) => (
+                  <Cell key={index} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Detail rows */}

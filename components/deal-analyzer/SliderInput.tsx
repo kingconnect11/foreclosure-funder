@@ -11,6 +11,7 @@ interface SliderInputProps {
   step: number
   format?: 'currency' | 'percent' | 'number' | 'months'
   className?: string
+  highlighted?: boolean
 }
 
 function formatValue(value: number, format: string): string {
@@ -40,9 +41,16 @@ export function SliderInput({
   step,
   format = 'currency',
   className,
+  highlighted = false,
 }: SliderInputProps) {
   return (
-    <div className={cn('space-y-2', className)}>
+    <div
+      className={cn(
+        'space-y-2 rounded-lg transition-all duration-300',
+        highlighted && 'bg-accent/5 px-2 py-2 animate-fade-in',
+        className
+      )}
+    >
       <div className="flex items-center justify-between">
         <label className="text-xs font-semibold uppercase tracking-wider text-ink-500">
           {label}
@@ -57,9 +65,12 @@ export function SliderInput({
               onChange(num)
             }
           }}
-          className="w-28 text-right bg-transparent text-accent font-mono text-sm font-semibold
+          className={cn(
+            `w-28 text-right bg-transparent text-accent font-mono text-sm font-semibold
                      border-b border-border focus:border-accent/50 outline-none px-1 py-0.5
-                     transition-colors"
+                     transition-colors`,
+            highlighted && 'border-accent'
+          )}
         />
       </div>
       <input
@@ -69,7 +80,7 @@ export function SliderInput({
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="deal-analyzer-slider w-full"
+        className={cn('deal-analyzer-slider w-full', highlighted && 'animate-pulse-soft')}
       />
       <div className="flex justify-between text-2xs text-ink-400 font-mono">
         <span>{formatValue(min, format)}</span>

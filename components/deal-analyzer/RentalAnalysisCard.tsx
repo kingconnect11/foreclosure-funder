@@ -4,9 +4,12 @@ import { motion } from 'framer-motion'
 import {
   AreaChart,
   Area,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
+  CartesianGrid,
+  ReferenceLine,
   ResponsiveContainer,
 } from 'recharts'
 import { AnimatedNumber } from './AnimatedNumber'
@@ -19,9 +22,17 @@ interface Props {
   analysis: RentalAnalysis
   inputs: DealInputs
   onChange: (updates: Partial<DealInputs>) => void
+  highlightedFields?: Array<keyof DealInputs>
 }
 
-export function RentalAnalysisCard({ analysis, inputs, onChange }: Props) {
+export function RentalAnalysisCard({
+  analysis,
+  inputs,
+  onChange,
+  highlightedFields = [],
+}: Props) {
+  const isHighlighted = (field: keyof DealInputs) => highlightedFields.includes(field)
+
   const rentGrowth = 0.02
   const projectionData = Array.from({ length: 120 }, (_, i) => {
     const month = i + 1
@@ -32,6 +43,8 @@ export function RentalAnalysisCard({ analysis, inputs, onChange }: Props) {
       analysis.totalCashInvested
     return { month, cashFlow: cumulativeCashFlow }
   }).filter((_, i) => i % 6 === 0)
+  const cashFlowAtFiveYears = projectionData.find((point) => point.month >= 60)?.cashFlow ?? 0
+  const cashFlowAtTenYears = projectionData.find((point) => point.month >= 120)?.cashFlow ?? 0
 
   return (
     <motion.div
@@ -69,6 +82,7 @@ export function RentalAnalysisCard({ analysis, inputs, onChange }: Props) {
             min={400}
             max={5000}
             step={50}
+            highlighted={isHighlighted('monthlyRent')}
           />
           <SliderInput
             label="Vacancy Rate"
@@ -78,6 +92,7 @@ export function RentalAnalysisCard({ analysis, inputs, onChange }: Props) {
             max={20}
             step={1}
             format="percent"
+            highlighted={isHighlighted('vacancyRate')}
           />
           <SliderInput
             label="Property Mgmt"
@@ -87,6 +102,7 @@ export function RentalAnalysisCard({ analysis, inputs, onChange }: Props) {
             max={15}
             step={0.5}
             format="percent"
+            highlighted={isHighlighted('propertyManagementPercent')}
           />
         </div>
       </div>
@@ -126,52 +142,96 @@ export function RentalAnalysisCard({ analysis, inputs, onChange }: Props) {
       </div>
 
       {/* Cash flow projection */}
-      <div className="bg-rice-50 border border-border rounded-xl p-5">
-        <h3 className="text-sm font-display font-semibold text-foreground mb-4">
-          10-Year Cash Flow Projection
-        </h3>
-        <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={projectionData}>
-            <defs>
-              <linearGradient id="cashFlowGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#27AE60" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="#27AE60" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <XAxis
-              dataKey="month"
-              tick={{ fill: '#6C757D', fontSize: 10 }}
-              tickFormatter={(v) => `${Math.round(v / 12)}yr`}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fill: '#6C757D', fontSize: 10 }}
-              tickFormatter={(v) => formatCurrency(v) ?? ''}
-              axisLine={false}
-              tickLine={false}
-              width={70}
-            />
-            <Tooltip
-              formatter={(value) => [formatCurrency(value as number), 'Cumulative Cash Flow']}
-              contentStyle={{
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #E8E8E0',
-                borderRadius: '12px',
-                fontSize: '12px',
-                color: '#1A1D20',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)',
-              }}
-            />
-            <Area
-              type="monotone"
-              dataKey="cashFlow"
-              stroke="#27AE60"
-              fill="url(#cashFlowGrad)"
-              strokeWidth={2}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+      <div className="bg-rice-50 border border-border rounded-xl p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-display font-semibold text-foreground">
+            10-Year Cash Flow Projection
+          </h3>
+          <span className="text-2xs font-semibold uppercase tracking-[0.08em] text-ink-500">
+            Breakeven {analysis.breakEvenMonths === Infinity ? 'N/A' : `${analysis.breakEvenMonths} mo`}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-lg border border-border bg-surface px-3 py-2">
+            <div className="text-2xs uppercase tracking-[0.08em] text-ink-500">5-Year Projection</div>
+            <div
+              className={`font-mono text-sm font-semibold ${
+                cashFlowAtFiveYears >= 0 ? 'text-success' : 'text-danger'
+              }`}
+            >
+              {formatCurrency(cashFlowAtFiveYears)}
+            </div>
+          </div>
+          <div className="rounded-lg border border-border bg-surface px-3 py-2">
+            <div className="text-2xs uppercase tracking-[0.08em] text-ink-500">10-Year Projection</div>
+            <div
+              className={`font-mono text-sm font-semibold ${
+                cashFlowAtTenYears >= 0 ? 'text-success' : 'text-danger'
+              }`}
+            >
+              {formatCurrency(cashFlowAtTenYears)}
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-surface p-3">
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={projectionData} margin={{ left: 6, right: 8 }}>
+              <defs>
+                <linearGradient id="cashFlowGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#27AE60" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#27AE60" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E8E8E0" vertical={false} />
+              <ReferenceLine y={0} stroke="#ADB5BD" strokeDasharray="4 4" />
+              <XAxis
+                dataKey="month"
+                tick={{ fill: '#6C757D', fontSize: 10 }}
+                tickFormatter={(v) => `${Math.round(v / 12)}yr`}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fill: '#6C757D', fontSize: 10 }}
+                tickFormatter={(v) => formatCurrency(v) ?? ''}
+                axisLine={false}
+                tickLine={false}
+                width={72}
+              />
+              <Tooltip
+                formatter={(value) => [formatCurrency(value as number), 'Cumulative Cash Flow']}
+                labelFormatter={(value) => `Month ${value}`}
+                cursor={{ stroke: '#E74C3C', strokeDasharray: '3 3' }}
+                contentStyle={{
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #E8E8E0',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  color: '#1A1D20',
+                  boxShadow: '0 6px 14px -6px rgb(0 0 0 / 0.18)',
+                }}
+                labelStyle={{ color: '#6C757D', fontSize: '11px', fontWeight: 600 }}
+              />
+              <Area
+                type="monotone"
+                dataKey="cashFlow"
+                stroke="#27AE60"
+                fill="url(#cashFlowGrad)"
+                strokeWidth={2}
+              />
+              <Line
+                type="monotone"
+                dataKey="cashFlow"
+                stroke="#1A1D20"
+                strokeOpacity={0.15}
+                strokeWidth={1}
+                dot={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Detail rows */}

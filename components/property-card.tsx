@@ -82,7 +82,7 @@ export function PropertyCard({ property, isSavedInitial }: PropertyCardProps) {
         {/* Property details */}
         <div className="p-5 flex-1 space-y-3">
           {property.bedrooms || property.bathrooms || property.sqft ? (
-            <div className="flex items-center gap-4 text-xs text-ink-500">
+            <div className="flex items-center gap-4 text-xs text-ink-500 flex-wrap">
               {property.bedrooms && (
                 <span className="flex items-center gap-1">
                   <Bed className="w-3.5 h-3.5" />
@@ -141,7 +141,7 @@ export function PropertyCard({ property, isSavedInitial }: PropertyCardProps) {
             onClick={handleSave}
             disabled={isSaved || isPending}
             className={clsx(
-              'w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all',
+              'w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-lg text-sm font-medium transition-all',
               isSaved
                 ? 'bg-success/10 text-success cursor-default'
                 : 'bg-rice-100 text-ink-700 hover:bg-accent hover:text-white'

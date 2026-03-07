@@ -35,7 +35,7 @@ See FOUNDING_ARCHITECTURE.md Section 10 for full spec.
 - [x] **No loading.tsx skeleton files** -- Added `loading.tsx` for dashboard, pipeline, admin, property detail, and deal-analyzer routes (2026-03-06). **Codex**
 - [x] **Signup password confirmation not validated** -- Fixed server-side validation in `signUp` and added client-side mismatch blocking in signup form. **Claude Code/Codex** (completed 2026-03-06)
 - [x] **Middleware blocks upcoming public pages** -- Updated auth middleware allowlist so unauthenticated users can access `/`, `/pricing`, and `/onboarding` while still protecting app routes. **Codex** (completed 2026-03-06)
-- [x] **Test suite foundation** -- Vitest configured with 54 passing unit tests covering lib/utils and lib/deal-analyzer/calculations. Still needed: integration tests for server actions, E2E for auth + pipeline flows. **Claude Code** (2026-03-07)
+- [x] **Test suite foundation** -- Vitest configured with 57 passing unit tests covering lib/utils, lib/deal-analyzer/calculations, and lib/owned/calculations. Still needed: integration tests for server actions, E2E for auth + pipeline flows. **Claude Code** (2026-03-07)
 
 ### Landing Page & Pricing (assigned to Kimi)
 
@@ -69,6 +69,11 @@ See FOUNDING_ARCHITECTURE.md Section 10 for full spec.
 - [x] **Personalized welcome message** -- Dashboard heading shows "Welcome back, {FirstName}" with fallback to "Dashboard". **Claude Code** (2026-03-07)
 - [ ] **No email verification** -- Supabase signup does not require email confirmation. Anyone can create accounts with fake emails. **Claude Code** (Supabase config)
 
+### Reporting + Monetization (Claude Code/Codex + Cursor)
+
+- [ ] **Property Intelligence PDF demo** -- Build a demo report flow that runs property intelligence analysis through Claude and exports a printable branded PDF by deal room owner (Mike King for demo). Include report schema, generation endpoint/server action, deal room branding layer (logo/colors/contact), print layout, and history/logging hooks. **Claude Code/Codex** for backend/report pipeline, **Cursor** for report viewer/export UX.
+- [ ] **Plan separation UX + capability enforcement** -- Free tier should show locked/grayed features plus upgrade prompts; paid tier should only show occasional gentle nudges to higher tier. Must enforce capability checks server-side (not only UI), then add lock chips, disabled states, and upgrade modal patterns client-side. **Claude Code** for capability and policy enforcement, **Cursor/Codex** for UX patterns.
+
 ---
 
 ## P2 -- Important for Alpha Experience
@@ -80,7 +85,8 @@ See FOUNDING_ARCHITECTURE.md Section 10 for full spec.
 - [ ] **Sale date urgency needs strengthening** -- Urgency colors exist but could be more prominent (pulsing badges, bolder colors for properties within 14 days). **Cursor**
 - [ ] **Keyboard shortcuts** -- No keyboard navigation (g+d for dashboard, g+p for pipeline, / for search). See PHASE1C_CURSOR_PROMPT.md Task 6. **Cursor**
 - [ ] **Data visualizations** -- recharts is installed but only used in deal analyzer. Could add charts to dashboard (property stage distribution, pipeline funnel). **Cursor**
-- [x] **Owned Properties tab + portfolio analytics** -- Added `/owned` route with CSV upload + manual entry, editable owned records, cost subcategory line items, chart pinning, and summary KPIs (total P/L, YTD P/L, construction/legal/interest totals, total portfolio value). Added dashboard KPI strip linking to `/owned`. Added closed-stage conversion flow so moving a pipeline deal to `closed` prompts owned conversion and moves it out of active pipeline views. Added backfill action for historical closed deals and pagination/filtering on owned list. **Codex** (2026-03-07)
+- [x] **Owned Properties -> Portfolio module** -- Shipped owned portfolio data model and app workflow, then promoted to canonical `/portfolio` route with `/owned` alias redirect compatibility. Includes: CSV upload + manual entry, editable records, cost subcategory line items, chart preferences, featured chart layout, summary KPIs (total P/L, YTD P/L, construction/legal/interest totals, total portfolio value), and pipeline-to-portfolio close conversion flow. Includes admin member switcher across full deal room, filter-reactive analytics, dashboard link updates, and bottom-positioned upload/manual forms on dedicated page. **Codex** (2026-03-07)
+- [x] **Portfolio demo data + import template** -- Seeded portfolio demo rows for all profiles (3-15 properties per profile with varied valuation/cost profiles) and added `assets/portfolio-import-demo-10.csv` with 10 fully populated rows for import demos. **Claude Code/Codex** (2026-03-07)
 - [x] **Deal Analyzer visual refresh + guided insights playground** -- Refreshed analyzer layout/visual hierarchy and added deterministic guided insights with strategy filters, one-click assumption patches, and single-step undo. Also added highlight feedback on changed inputs for better scenario iteration flow (2026-03-07). **Codex**
 - [ ] **AI property descriptions (Anthropic, next phase low-medium)** -- Generate 1-2 sentence property blurbs server-side (not client-side) and store/cached per property, with manual regenerate option and fallback text when generation fails. **Claude Code/Codex**
 - [ ] **Dashboard/Pipeline thumbnails + Street View previews (next phase, low-medium)** -- Defer implementation until Google Maps API setup is complete. Add property thumbnail/Street View image support to dashboard and pipeline cards with graceful fallback when imagery is unavailable. **Codex/Cursor**
@@ -88,6 +94,7 @@ See FOUNDING_ARCHITECTURE.md Section 10 for full spec.
 - [ ] **Deal Analyzer side-by-side compare mode** -- Compare two properties/scenarios in parallel with delta highlights for profit, ROI, cash flow, and risk signals; target layout is two property detail cards visible at the same time with a comparison card beneath, while keeping the existing left menu/nav pattern. **Codex**
 - [ ] **Settings/menu UX redesign (future)** -- Improve overall button and menu architecture, including a dedicated settings menu pattern for app-wide controls. **Cursor/Codex**
 - [ ] **Pipeline motion polish + closed-stage celebration animation (next phase, low-medium)** -- Add tasteful motion (lane count transitions, optional staggered card reveals, urgency pulse behavior) and a more dramatic celebratory animation/state when a deal reaches `closed`. **Codex/Cursor**
+- [ ] **Colorful controls and chips pass** -- Increase visual affordance with more icon buttons, switches/toggles, and pastel-toned chips across dashboard/pipeline/portfolio/admin while preserving the current calm zen aesthetic and avoiding pink/purple bias. Reduce gray default dropdown feel by replacing key selects with richer control patterns where appropriate. **Cursor/Codex**
 
 ### Schema / Security (Claude Code)
 
@@ -110,6 +117,7 @@ These are NOT Currently in the scope of alpha tasks. Listed here for context so 
 - [ ] Command palette (Cmd+K)
 - [ ] Drag-and-drop pipeline (kanban) Med priority
 - [ ] Dark mode toggle med priority
+- [ ] iOS delivery strategy decision (native vs web-first) with recommendation memo and prototype path
 - [ ] PWA support / React Native app (Phase 5) Med priority, iPhone app could be useful sooner rather than later
 - [ ] AI voice agent for cold-calling (Phase 6) 
 

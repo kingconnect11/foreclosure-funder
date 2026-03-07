@@ -1,7 +1,7 @@
 'use client'
 
 import { InvestorPipeline, PipelineStage, PipelineStageHistory } from '@/lib/types'
-import { saveToPipeline, changeStage, changeStageAndConvertToOwned } from '@/actions/pipeline'
+import { saveToPipeline, changeStage, changeStageAndConvertToOwned, removeFromPipeline } from '@/actions/pipeline'
 import { useState } from 'react'
 import clsx from 'clsx'
 import { useRouter } from 'next/navigation'
@@ -122,6 +122,20 @@ export function StageProgress({
     })
   }
 
+  const handleRemoveFromPipeline = async () => {
+    if (!pipelineEntry || isSaving) return
+    const confirmed = window.confirm('Remove this property from pipeline?')
+    if (!confirmed) return
+
+    setIsSaving(true)
+    try {
+      await removeFromPipeline(pipelineEntry.id)
+      router.refresh()
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const confirmStageChange = async () => {
     if (!pipelineEntry || !targetStage || isSaving) return
     setIsSaving(true)
@@ -173,6 +187,18 @@ export function StageProgress({
   return (
     <>
       <div className="zen-card p-5 flex flex-col gap-6">
+        <div className="flex items-center justify-between gap-3">
+          <label className="label-zen">Pipeline Actions</label>
+          <button
+            type="button"
+            onClick={handleRemoveFromPipeline}
+            disabled={isSaving}
+            className="btn-ghost text-xs text-danger hover:bg-danger/10 px-3 py-1.5"
+          >
+            {isSaving ? 'Working...' : 'Remove from Pipeline'}
+          </button>
+        </div>
+
         <div className="flex flex-col gap-3">
           <label className="label-zen">Current Stage</label>
 

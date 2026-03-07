@@ -2,216 +2,238 @@
 
 ## Session Metadata
 
-- Date: 2026-03-07 (second session)
+- Date: 2026-03-07 (latest)
 - Branch: `claude/harden-midnight-terminal-Siq88`
-- Last commit: `c587c07` (`docs: update CLAUDE.md and TODO.md with session progress`)
-- Previous session last commit: `4ef0e92`
-- This is the canonical handoff file in root. Do not create additional handoff files.
+- Last pushed commit: `b9c4eec` (`feat: revamp portfolio page with featured charts and import template`)
+- Previous commits in this portfolio stream: `fb24a7d`, `abb7e28`
+- Canonical handoff file: this root `HANDOFF.md`
 
-## Goal of This Session
+## Session Goal
 
-1. Review Codex work, commit it in scoped batches.
-2. Ship quick wins (notes revalidation, design token fix, welcome message).
-3. Connect Deal Analyzer to property data.
-4. Set up test suite foundation.
-5. Push and verify Vercel deployment.
+1. Build and harden Owned Properties tracking from pipeline through analytics.
+2. Resolve access and data visibility issues for admin/deal room workflows.
+3. Rename and reposition Owned as Portfolio with stronger dedicated analytics UX.
+4. Deploy previews and validate end-to-end behavior.
 
 ## What Was Completed
 
-### 1) Codex Work Committed (8 scoped batches)
+## Phase 1 -- Owned Properties Foundation (shipped in `abb7e28`)
 
-All previously uncommitted Codex work reviewed and committed:
+### Database and Data Model
 
-- **Auth hardening** (`ab4f8f5`) -- Password confirmation (client + server), middleware allowlist for public routes, signup form extracted to client component, 44px touch targets
-- **Onboarding form** (`0e28c5f`) -- Config-driven `/onboarding` route, draft/submit save modes, admin investor switcher, server action with auth checks
-- **Loading skeletons** (`f05b217`) -- 5 routes: dashboard, pipeline, admin, property detail, deal-analyzer + deal-analyzer error boundary
-- **Frontend polish** (`40b1a4f`) -- Admin table bg-rice-50 fix, group notes zen tokens, property notes cleanup, pipeline tweaks, CSS additions
-- **Infrastructure** (`010329c`) -- ESLint flat config migration for Next.js 16, postcss config, dependency updates
-- **Security migration** (`e9f1b58`) -- Profile escalation guard trigger, investor_pipeline.deal_room_id index, super_admin stage history RLS policy
-- **Documentation** (`366b765`) -- CLAUDE.md, TODO.md, AGENTS.md, HANDOFF.md updates
-- **Onboarding query** (`0421e00`) -- getInvestorPreferences added to lib/queries.ts
+- Added migration `supabase/migrations/20260307020000_owned_properties.sql`.
+- Added owned portfolio schema:
+  - `owned_properties`
+  - `owned_property_cost_items`
+  - `owned_chart_preferences`
+- Added owned-related enums, constraints, and RLS coverage.
+- Extended `investor_pipeline` with `moved_to_owned_at` so closed deals can be moved out of active pipeline views.
 
-### 2) Quick Wins Shipped
+### Backend / Server Actions
 
-Commit `8b9634b`:
+- Added `actions/owned.ts` with:
+  - manual create/update/delete for portfolio properties,
+  - CSV import with row-level validation and per-row warning reporting,
+  - owned property cost-item upsert/delete,
+  - chart preference persistence,
+  - backfill action to convert historical closed pipeline rows into portfolio rows.
+- Added pipeline conversion flow in `actions/pipeline.ts`:
+  - `changeStageAndConvertToOwned(...)`
+  - used by stage-progress modal when moving a pipeline deal to `closed`.
 
-- `updateNotes` now calls `revalidatePath()` for `/pipeline` and property detail -- notes reflect without refresh
-- `error.tsx` hardcoded `text-[#0B1928]` replaced with `text-foreground` design token
-- Dashboard heading shows "Welcome back, {FirstName}" with fallback
+### Analytics + Query Layer
 
-### 3) Deal Analyzer Connected to Property Data
+- Added `lib/owned/types.ts` and `lib/owned/calculations.ts`.
+- Added portfolio analytics outputs:
+  - total profit/loss,
+  - YTD profit/loss,
+  - construction/legal/interest totals,
+  - total portfolio value,
+  - trend and category breakdown chart data.
+- Added query paths in `lib/queries.ts` for owned data retrieval + analytics.
 
-Commit `b125540`:
+### UI Surfaces
 
-- Page accepts `?propertyId=uuid` URL param
-- Server component wrapper fetches property data, client component renders UI
-- Foreclosure amount maps to purchase price, county appraisal maps to ARV
-- Property detail page has "Analyze This Deal" button
-- Manual entry still works as default when no propertyId
+- Added dedicated owned route and loading skeleton:
+  - `app/(main)/owned/page.tsx`
+  - `app/(main)/owned/loading.tsx`
+- Added owned management UI:
+  - `components/owned/owned-tab.tsx`.
+- Integrated dashboard summary module and navigation entry.
+- Added property detail trigger to run deal analyzer quickly from property context.
 
-### 4) Test Suite Foundation
+### Tests
 
-Commit `6806fd8`:
+- Added unit tests for owned analytics calculations:
+  - `__tests__/lib/owned-calculations.test.ts`
+- Total suite now 57 passing tests.
 
-- vitest configured with path aliases matching tsconfig
-- `npm run test` (54 tests, all passing) and `npm run test:watch`
-- 24 unit tests for `lib/utils.ts` (formatCurrency, formatDate, saleDateUrgency, timeInStage, cn, etc.)
-- 30 unit tests for `lib/deal-analyzer/calculations.ts` (flip, rental, wholesale with edge cases)
+## Phase 2 -- Access, Membership, and Behavior Fixes (shipped in `fb24a7d`)
 
-### 5) Deployment Status
+### Portfolio Visibility and Switching
 
-- All commits pushed to remote (`c587c07`)
-- Vercel preview deployment `dpl_9jTdh3DpJqUkTFjzo71U5Mi7H1UL` is **READY**
-- Production is still on `4ef0e92` -- needs merge to main or promote to update production
-- PR #11 exists for this branch
+- Fixed portfolio ownership selector to support all deal room members, not only investor-role rows.
+- Admin and super_admin can now switch between members and inspect each member portfolio view.
+- Default selection preference is current user when present in the member list.
 
-## Skipped Files (not committed, user confirmed)
+### Filter-Accurate Analytics
 
-- `.claude/` -- local agent config
-- `PHASE1C_CLAUDE_CODE_PROMPT.md` / `PHASE1C_CURSOR_PROMPT.md` -- prompt files
-- `archive/v0-dashboard/` -- archived bake-off entry
-- `scaling article.rtfd/` -- unrelated file
-- `docs/plans/2026-03-07-philip-todo-api-and-ai.md` -- operator plan doc
+- `status` and `search` filters now affect both:
+  - the portfolio table, and
+  - analytics cards/charts.
+- Prevented prior mismatch where cards did not reflect filtered subsets.
 
-## Important Notes for Next Session
+### Naming / Product Language
 
-1. **Production deploy needed** -- Preview is ready but production hasn't been updated. Merge PR #11 to main or promote the preview deployment.
-2. **Test suite is foundation only** -- Unit tests exist for utils and calculations. Still needed: integration tests for server actions, E2E for auth + pipeline.
-3. **Onboarding RLS gap** -- Admin updates to investor_preferences bypass RLS via serviceClient. Not a security hole (service_role is trusted) but should add explicit admin RLS policy for clarity.
-4. **Deal Analyzer compare mode** -- Still a backlog item, not implemented.
-5. **Street View/thumbnails** -- Still blocked on Google Maps API setup.
+- Updated app and marketing references from "Owned" to "Portfolio" where applicable.
+- Kept compatibility while transitioning route behavior.
 
-## Remaining Claude Code Tasks (priority order)
+## Phase 3 -- Portfolio UX Rework + Alias Hardening (shipped in `b9c4eec`)
 
-1. Integration tests for server actions (P0 expansion)
-2. Email verification setup (P1 -- Supabase config)
-3. RLS tier-gating enforcement (P2)
-4. Flip calculation loan term parameterization (P2)
-5. AI property descriptions with Anthropic (P2)
+### Route and Alias
 
-## Remaining Tasks for Other Agents
+- Introduced canonical portfolio route:
+  - `app/(main)/portfolio/page.tsx`
+  - `app/(main)/portfolio/loading.tsx`
+- Converted `/owned` into alias redirect:
+  - `app/(main)/owned/page.tsx` redirects to `/portfolio`.
+- Alias now preserves query parameters so old bookmarks remain valid.
 
-### Cursor/Codex
+### Portfolio Layout Reordering (per product direction)
 
-- Sale date urgency visual strengthening
-- Keyboard shortcuts (g+d, g+p, /, Escape)
-- Data visualizations (dashboard charts)
-- Pipeline visual enrichment pack (stage chips, card density)
-- Pipeline motion polish + closed celebration animation
-- Settings/menu UX redesign (future)
+- Reordered dedicated portfolio page to:
+  1. large featured chart,
+  2. secondary charts,
+  3. KPI/data cards,
+  4. property detail section,
+  5. data entry tools at bottom (CSV upload + manual add).
+- Moved less aesthetic data-entry panels to bottom to foreground analytics storytelling.
 
-### Human (Philip)
+### Chart Improvements
 
-- Google Maps API setup (unblocks Street View/thumbnails)
-- Competitor research (FOUNDING_ARCHITECTURE.md Section 21)
-- Review and merge PR #11 to production
+- Added new charts component:
+  - `components/owned/portfolio-charts.tsx`
+- Added featured/favorite star chart behavior with persistence.
+- Increased chart size and visual emphasis.
+- Added more dynamic visuals (gradient fills, stronger color separation, animation).
 
-### Human (Mike)
+### Import Template
 
-- Finalize onboarding questions
+- Added example import file:
+  - `assets/portfolio-import-demo-10.csv`
+- Includes 10 fully filled example rows with varied status, valuation, and cost data.
 
----
+### Navigation + Revalidation Updates
 
-## Kimi Landing Page + Pricing Prompt
+- Updated primary navigation and dashboard links to `/portfolio`.
+- Ensured mutations revalidate both `/portfolio` and alias `/owned` for consistency.
 
-### Overview
+## Operational Work Completed in Supabase (outside git)
 
-Build the landing page at `/` and pricing section for Foreclosure Funder. This is P0 -- it blocks alpha launch. The landing page is the first thing potential investors see. It needs to feel premium, confident, and alive with motion.
+- Ran owned-properties migration in target project after resolving policy/guard execution sequencing.
+- Seeded demo portfolio data for all profiles (3-15 properties per profile, varied asset values/types).
+- Seeded associated cost line items for analytics depth.
+- Confirmed studio account admin access + deal room assignment path for portfolio visibility.
 
-### Design Direction
+## Validation Summary
 
-**Rich animations and lots of movement.** This is a marketing page, not an app page -- go big. Think Stripe, Linear, or Vercel-level polish. Every section should have intentional motion that draws the eye and builds trust.
+- `npm run test` passes (57/57).
+- `npm run build` passes.
+- Latest preview deployment for this work:  
+  `https://foreclosure-funder-28sm0zgfs-philip-kings-projects-b446acce.vercel.app`
 
-**Core emotional message:** Property investors finding peace of mind because all their intelligence on foreclosure properties comes from one place. No more juggling court records, spreadsheets, county sites, and random tools. Foreclosure Funder is their single command center.
+## Pre-Merge Fixes Completed (Current Turn)
 
-### Visual and Animation Requirements
+1. Pipeline deletion is now quick and available in both key places:
+   - property detail via `StageProgress` action,
+   - main pipeline board via per-card remove action,
+   - dashboard cards now support remove when a property is already saved in pipeline.
+2. `removeFromPipeline` now supports admin/super_admin authorization in deal-room scope (plus investor self-removal), and now revalidates `/pipeline`, `/dashboard`, `/admin`, and affected property detail paths.
+3. Pipeline board readability improved:
+   - all stages are now always visible (not only non-empty columns),
+   - stage headers and stage pills now use distinct pastel color tones,
+   - empty-stage placeholders make full workflow discoverable.
+4. Admin panel data coverage fixed:
+   - investor “Saved” counts now include portfolio property counts (not only pipeline rows),
+   - recent activity feed now includes portfolio events (`portfolio_added`) in addition to pipeline transitions,
+   - activity queries now resolve by deal-room member IDs, preventing silent misses when `deal_room_id` linkage on rows is inconsistent.
 
-- **Hero section:** Full-width with a cinematic entrance animation. Show a property investor (stock imagery or illustrated) looking confident and relaxed -- not stressed, not frantic. They have everything they need in one place. Use parallax scrolling, subtle particle effects, or a morphing data visualization that resolves into the product. Bold headline with staggered word-by-word reveal animation.
+## Files Changed in Latest Commit (`b9c4eec`)
 
-- **Property intelligence showcase:** Animate a mockup of the dashboard/pipeline coming together piece by piece -- cards sliding in, data populating, stage badges appearing. Show the product assembling itself in real time as the user scrolls. Use scroll-triggered animations (Framer Motion or GSAP).
+- `actions/owned.ts`
+- `actions/pipeline.ts`
+- `app/(main)/dashboard/page.tsx`
+- `app/(main)/owned/page.tsx`
+- `app/(main)/portfolio/loading.tsx`
+- `app/(main)/portfolio/page.tsx`
+- `assets/portfolio-import-demo-10.csv`
+- `components/nav.tsx`
+- `components/owned/owned-tab.tsx`
+- `components/owned/portfolio-charts.tsx`
 
-- **Peace of mind section:** Large lifestyle imagery of property investors/owners looking relaxed, confident, successful. Not stock-photo-generic -- aim for authentic, warm, aspirational. Show families in front of properties, investors reviewing clean dashboards on tablets, professionals closing deals with confidence. Use a soft parallax float effect on images. Overlay subtle data visualization elements (charts, property pins) that fade in and out to reinforce the "intelligence" angle.
+## Known Follow-ups / Risks
 
-- **Feature highlights:** Animated cards that expand/flip/reveal on hover or scroll-into-view. Each feature should have a micro-animation (icon spin, number count-up, progress bar fill). Key features to highlight:
-  - Real-time foreclosure tracking (live data, not stale lists)
-  - CRM pipeline (track every deal from discovery to close)
-  - Deal Analyzer (flip/rental/wholesale -- instant ROI calculations)
-  - Court research and title intelligence (coming soon)
-  - Team collaboration via Deal Room (for agents managing investors)
+1. Supabase password reset links must use hosted URLs in auth settings (site URL + redirect URL list), not localhost in production.
+2. Tier gating still needs stricter backend enforcement and explicit UI lock states.
+3. Property intelligence PDF flow is not yet productized in-app.
+4. iOS strategy is still open (native app vs highly optimized web shell).
 
-- **Social proof / trust section:** Animated testimonial carousel or staggered fade-in testimonial cards. Use placeholder testimonials for now (Mike will provide real ones). Include trust badges, security indicators, and a "Built in Kansas, for Kansas investors" local pride element.
+## Requested Next Priorities (from Mike)
 
-- **Pricing section:** Four-tier comparison with animated tier cards that elevate/glow on hover. Staggered entrance animation as user scrolls to pricing. The recommended tier ("Standard" at $20/mo) should have a subtle persistent pulse or glow. Tiers:
-  - **Free** ($0/mo) -- 2-3 listings per session, address + sale date only, save up to 3 properties, no pipeline, educational content
-  - **Standard** ($20/mo) -- Full listings, court research, appraisal data, recommendation scores, full CRM pipeline, unlimited saves, property alerts, onboarding interview, mobile access
-  - **Premium** ($40/mo) -- Everything in Standard + AI voice agent, priority notifications, comparable sales, maps/satellite, document prep, automation, priority support
-  - **Deal Room** ($500/mo) -- Agent admin panel, branded deal room, full onboarding meeting, 2 custom feature requests, homeowner outreach automation, weekly investor digests
+## Priority 0 -- Pipeline Experience Redesign + Admin Activity Dashboard
 
-- **CTA sections:** Multiple call-to-action moments throughout the page, each with a satisfying button animation (ripple, scale, color shift). Primary CTA: "Start Free" linking to `/signup`. Secondary CTA: "See Pricing" smooth-scrolling to pricing section.
+Goal: make pipeline immediately understandable, more compact, and visually differentiated, while adding a chart-first activity dashboard for admins.
 
-- **Footer:** Clean footer with company info, quick links, and a subtle ambient animation (floating property icons, gentle gradient shift).
+Tasks:
+1. Redesign pipeline board into a tighter, color-coded kanban with clear stage hierarchy and better small-card density.
+2. Add pre-navigation card preview pop-up/modal on pipeline cards (quick details + key actions) before full property page navigation.
+3. Improve horizontal discoverability (sticky stage index, stage jump controls, and visible continuation cues so users know there are columns past counter-offered).
+4. Add admin-side activity dashboard under `/admin` with chart cards (team pipeline distribution, stage velocity, active vs closed trends, and portfolio conversion metrics), visually aligned to portfolio chart style.
+5. Include activity filters by investor/member and date range, with reusable chart components and lightweight performance queries.
 
-### Motion Guidelines
+## Phase A -- Property Intelligence Demo PDF
 
-- Use `framer-motion` (already installed in the project) for all animations
-- Scroll-triggered animations should use intersection observer pattern
-- Keep animations smooth (60fps) -- prefer transforms and opacity over layout-triggering properties
-- Add `prefers-reduced-motion` media query respect for accessibility
-- Stagger delays should feel natural (50-100ms between elements)
-- No animation should block the user from reading content -- motion enhances, never distracts
-- Page should feel alive even when not scrolling (subtle floating elements, gentle gradient pulses)
+Goal: run property intelligence reports through Claude, generate printable branded PDF per deal room owner.
 
-### Imagery Guidance
+Tasks:
+1. Define report schema + data inputs (property, court, comps, risk, recommendation).
+2. Build report generation endpoint/action and template renderer.
+3. Add branding layer from deal room profile (logo/colors/contact/footer).
+4. Add printable PDF export flow and report history entry.
+5. Add "Run Report" UX and demo seed examples.
 
-Use high-quality stock photography or illustrations showing:
-- Diverse property investors looking confident and organized
-- Beautiful residential properties (single family homes, not mansions -- Kansas market)
-- Clean, modern office/home-office environments with technology
-- Families benefiting from smart property investments
-- Abstract data visualizations that feel premium (think Bloomberg terminal meets Apple design)
+## Phase B -- Plan Separation and Upgrade UX
 
-### Technical Constraints
+Goal: free plan sees clear locked states and upgrade prompts; paid plans see occasional gentle nudges.
 
-- This is a Next.js App Router page at `app/page.tsx` (or could be a dedicated layout)
-- The page must be accessible without authentication (already in middleware allowlist)
-- Use Tailwind CSS only for styling (project convention)
-- Use `cn()` from `lib/utils.ts` for conditional classnames
-- No em dashes anywhere -- use "--" or rewrite
-- Keep the existing app navigation separate -- landing page should have its own nav/header
-- Mobile-first responsive design with 44px minimum touch targets
-- Page should load fast -- lazy load heavy images and animations below the fold
+Tasks:
+1. Define feature matrix by tier (Free, paid baseline, upper tier, Deal Room).
+2. Add backend capability checks in query/action paths.
+3. Add UI lock patterns:
+   - grayed controls,
+   - lock chips,
+   - contextual upgrade modals.
+4. Add low-frequency soft nudge surfaces for paid users.
+5. Add events/analytics for upgrade funnel instrumentation.
 
-### Color Direction
+## Phase C -- Mobile Direction and Visual Controls
 
-- Use the existing design system tokens where possible (accent red, zen backgrounds)
-- For marketing flair, can extend beyond the app palette -- blues, greens, warm golds
-- No pink/purple (product-owner preference)
-- Dark sections are OK for contrast/drama (dark hero, light features, dark testimonials, light pricing)
+Goal: decide iOS strategy while improving app controls without damaging current zen aesthetic.
 
-### Content Copy (Philip will refine, but start with)
+Tasks:
+1. Build decision doc: native iOS app vs web app optimized for iPhone.
+2. If web-first: tighten touch ergonomics, safe-area behavior, and mobile navigation polish.
+3. Add richer control language across app:
+   - more icon buttons,
+   - more toggle/switch patterns,
+   - colorful pastel chips and segmented controls,
+   - less gray dropdown-heavy UI.
+4. Keep palette constraints: pastel accents, no pink/purple bias, preserve calm visual system.
 
-- **Headline:** "Your Foreclosure Intelligence Command Center" or "Every Kansas Foreclosure Deal. One Place. Total Clarity."
-- **Subheadline:** "Stop juggling county records, spreadsheets, and gut feelings. Foreclosure Funder gives you real-time property intelligence, deal analysis, and pipeline management -- all in one platform built for Kansas investors."
-- **Value props:** Real-time data, not stale lists. Smart deal analysis, not guesswork. Pipeline tracking from discovery to close. Built by investors, for investors.
+## Recommended Next Execution Order
 
-### Deliverable
-
-A complete, production-ready landing page with:
-1. Animated hero section
-2. Feature showcase with scroll-triggered animations
-3. Peace of mind / lifestyle imagery section
-4. Social proof / testimonials (placeholder content OK)
-5. Pricing tier comparison with animations
-6. Multiple CTAs throughout
-7. Responsive from 320px to 1440px+
-8. Mobile-first with touch-friendly interactions
-
----
-
-## Proposed Next Build Order
-
-1. **Kimi:** Landing page + pricing (P0, blocks alpha)
-2. **Philip:** Merge PR #11, promote to production
-3. **Claude Code:** Integration tests, email verification
-4. **Cursor/Codex:** Pipeline visual enrichment, motion polish
-5. **All:** Alpha launch prep and smoke testing
+1. Pipeline redesign + admin activity dashboard (Priority 0).
+2. Property Intelligence PDF demo (high demo value, near-term sales utility).
+3. Tier gating backend + UI lock states (monetization and product clarity).
+4. Mobile strategy decision and implementation spike (native vs web shell).
+5. Control/icon/chip design system expansion across dashboard, pipeline, portfolio, and admin.

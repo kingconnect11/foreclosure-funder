@@ -1,14 +1,25 @@
+'use client'
+
 import Link from 'next/link'
 import { InvestorPipeline, Property } from '@/lib/types'
 import { formatCurrency, formatDate, saleDateUrgency, timeInStage } from '@/lib/utils'
-import { Clock, MapPin, FileText } from 'lucide-react'
+import { Clock, MapPin, FileText, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
+import { removeFromPipeline } from '@/actions/pipeline'
+import { useRouter } from 'next/navigation'
+import { useState, useTransition } from 'react'
 
 export type PipelineEntryWithProperty = InvestorPipeline & {
   properties: Property
 }
 
 export function PipelineCard({ entry }: { entry: PipelineEntryWithProperty }) {
+  const router = useRouter()
+  const [isRemoving, startTransition] = useTransition()
+  const [isHidden, setIsHidden] = useState(false)
+
+  if (isHidden) return null
+
   const property = entry.properties
   const urgency = saleDateUrgency(property.sale_date)
   
@@ -16,9 +27,40 @@ export function PipelineCard({ entry }: { entry: PipelineEntryWithProperty }) {
     ? (entry.notes.length > 60 ? entry.notes.substring(0, 60) + '...' : entry.notes)
     : null
 
+  const handleRemove = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (isRemoving) return
+    const confirmed = window.confirm('Remove this property from pipeline?')
+    if (!confirmed) return
+
+    startTransition(async () => {
+      try {
+        await removeFromPipeline(entry.id)
+        setIsHidden(true)
+        router.refresh()
+      } catch {
+        // no-op: server action surfaces auth/permission errors
+      }
+    })
+  }
+
   return (
     <Link href={`/property/${property.id}`} className="block group">
       <div className="zen-card-interactive p-4">
+        <div className="flex justify-end mb-1">
+          <button
+            type="button"
+            onClick={handleRemove}
+            disabled={isRemoving}
+            className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[11px] text-text-muted hover:text-danger hover:border-danger/40 hover:bg-danger/5 transition-colors"
+            aria-label="Remove from pipeline"
+          >
+            <Trash2 className="w-3 h-3" />
+            {isRemoving ? 'Removing...' : 'Remove'}
+          </button>
+        </div>
+
         {/* Address */}
         <h4 className="font-semibold text-foreground leading-tight mb-1 group-hover:text-accent transition-colors">
           {property.address}

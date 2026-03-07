@@ -450,27 +450,95 @@ export async function getDealRoomMembers(
   return data ?? []
 }
 
-export type DealRoomActivityEntry = InvestorPipeline & {
-  profiles: { full_name: string | null }
-  properties: { address: string | null; city: string | null }
+export interface DealRoomActivityEntry {
+  id: string
+  activity_type: 'pipeline' | 'portfolio'
+  stage: string | null
+  offer_amount: number | null
+  updated_at: string | null
+  profiles: { full_name: string | null } | null
+  properties: { address: string | null; city: string | null } | null
 }
 
 export async function getDealRoomActivity(
   dealRoomId: string
 ): Promise<DealRoomActivityEntry[]> {
   const supabase = await createClient()
+  const supabaseAny = supabase as unknown as {
+    from: (table: string) => any
+  }
 
-  const { data, error } = await supabase
+  const { data: members, error: membersError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('deal_room_id', dealRoomId)
+
+  if (membersError) throw membersError
+
+  const memberIds = (members ?? []).map((member) => member.id)
+  if (memberIds.length === 0) return []
+
+  const { data: pipelineData, error: pipelineError } = await supabase
     .from('investor_pipeline')
     .select(
       '*, profiles!investor_pipeline_investor_id_fkey(full_name), properties(address, city)'
     )
-    .eq('deal_room_id', dealRoomId)
+    .in('investor_id', memberIds)
     .order('updated_at', { ascending: false })
     .limit(50)
 
-  if (error) throw error
-  return (data ?? []) as DealRoomActivityEntry[]
+  if (pipelineError) throw pipelineError
+
+  const { data: portfolioData, error: portfolioError } = await supabaseAny
+    .from('owned_properties')
+    .select(
+      'id, address, city, updated_at, acquired_at, created_at, profiles!owned_properties_investor_id_fkey(full_name)'
+    )
+    .in('investor_id', memberIds)
+    .order('updated_at', { ascending: false })
+    .limit(50)
+
+  if (portfolioError) throw portfolioError
+
+  const pipelineEntries = (pipelineData ?? []).map((row: any) => ({
+    id: row.id,
+    activity_type: 'pipeline' as const,
+    stage: row.stage ?? null,
+    offer_amount: row.offer_amount ?? null,
+    updated_at: row.updated_at ?? null,
+    profiles: row.profiles
+      ? { full_name: row.profiles.full_name ?? null }
+      : { full_name: null },
+    properties: row.properties
+      ? {
+          address: row.properties.address ?? null,
+          city: row.properties.city ?? null,
+        }
+      : { address: null, city: null },
+  }))
+
+  const portfolioEntries = (portfolioData ?? []).map((row: any) => ({
+    id: `portfolio-${row.id}`,
+    activity_type: 'portfolio' as const,
+    stage: 'portfolio_added',
+    offer_amount: null,
+    updated_at: row.updated_at ?? row.acquired_at ?? row.created_at ?? null,
+    profiles: row.profiles
+      ? { full_name: row.profiles.full_name ?? null }
+      : { full_name: null },
+    properties: {
+      address: row.address ?? null,
+      city: row.city ?? null,
+    },
+  }))
+
+  return [...pipelineEntries, ...portfolioEntries]
+    .sort((a, b) => {
+      const aTime = a.updated_at ? new Date(a.updated_at).getTime() : 0
+      const bTime = b.updated_at ? new Date(b.updated_at).getTime() : 0
+      return bTime - aTime
+    })
+    .slice(0, 50)
 }
 
 export async function getInvestorPipelineSummary(
@@ -491,6 +559,21 @@ export async function getInvestorPipelineSummary(
     summary[stage] = (summary[stage] ?? 0) + 1
   }
   return summary
+}
+
+export async function getInvestorPortfolioCount(investorId: string): Promise<number> {
+  const supabase = await createClient()
+  const supabaseAny = supabase as unknown as {
+    from: (table: string) => any
+  }
+
+  const { count, error } = await supabaseAny
+    .from('owned_properties')
+    .select('id', { count: 'exact', head: true })
+    .eq('investor_id', investorId)
+
+  if (error) throw error
+  return count ?? 0
 }
 
 // ---------------------------------------------------------------------------

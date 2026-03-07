@@ -11,7 +11,7 @@ Shared conventions for all AI agents working on this project (Claude Code, Curso
 **Two products:** Investor Dashboard (property listings, CRM pipeline, deal analyzer) + Deal Room (agent admin panel).
 **Source of truth:** `FOUNDING_ARCHITECTURE.md` for product decisions, `FUNCTIONAL_SPEC.md` for page behavior.
 **Current phase:** Phase 1 Alpha Launch (see FOUNDING_ARCHITECTURE.md Section 19). Target: working product for Mike + 1-2 investors in 4 weeks.
-**Current status:** Phase 1 frontend built, Phase 1c hardening done, moving to alpha. Frontend design is current working state.
+**Current status:** Alpha build is live with Portfolio module (`/portfolio` canonical route), owned analytics, pipeline-to-portfolio conversion, and marketing site baseline shipped. Current focus has shifted to report demos, subscription gating UX, and mobile strategy.
 
 ### Agent Team
 
@@ -24,6 +24,13 @@ Shared conventions for all AI agents working on this project (Claude Code, Curso
 | Human (Mike) | Onboarding questions, investor feedback, sales content | - |
 
 Check `TODO.md` for which agent is assigned to each task.
+
+### Current Priority Track (2026-03-07)
+
+1. Property Intelligence report demo with printable branded PDF output
+2. Plan-tier separation with lock states and upgrade nudges (backend-enforced capabilities)
+3. iOS delivery decision (native vs web-first iPhone optimized experience)
+4. Controls pass: more icon buttons, switches, and pastel chips without breaking current zen aesthetic
 
 ---
 
@@ -133,14 +140,17 @@ Check `TODO.md` for which agent is assigned to each task.
 
 ## Testing Requirements
 
-**Current state: no test suite exists.** This is a known gap (see TODO.md).
+**Current state:** Vitest is configured with 57 passing unit tests covering:
+- `lib/utils.ts`
+- `lib/deal-analyzer/calculations.ts`
+- `lib/owned/calculations.ts`
 
-When tests are added, follow these guidelines:
+Remaining testing gaps:
 - Unit tests for `lib/` functions (calculations, utils, queries)
 - Integration tests for server actions
 - Component tests for client components with user interaction
 - E2E tests for critical flows: auth, save to pipeline, stage change, admin panel
-- `npm run build` must always pass with zero TypeScript errors (this is the current "test")
+- `npm run build` must always pass with zero TypeScript errors
 
 ---
 
@@ -153,7 +163,7 @@ When tests are added, follow these guidelines:
 - Admin routes check role server-side and redirect investors to `/dashboard`
 
 ### Row-Level Security (RLS)
-- 35 RLS policies enforce data isolation at the database level
+- RLS policies enforce data isolation at the database level (investor, admin, super_admin scopes)
 - Investors can only read/write their own pipeline entries
 - Admins can read/write within their deal room's scope
 - Super admin (Philip) has unrestricted access
@@ -172,7 +182,7 @@ When tests are added, follow these guidelines:
 
 ---
 
-## Component Inventory (19 components)
+## Component Inventory (core components)
 
 | Component | Type | Purpose |
 |-----------|------|---------|
@@ -188,6 +198,8 @@ When tests are added, follow these guidelines:
 | admin-investor-table.tsx | client | Admin investor table with expandable rows |
 | activity-feed.tsx | client | Admin activity feed with stage filter |
 | deal-analyzer/*.tsx | client | 7 components for the deal analyzer tool |
+| owned/owned-tab.tsx | client | Portfolio property editor and import/manual entry tools |
+| owned/portfolio-charts.tsx | client | Featured portfolio charts with favorite/star behavior |
 
 ---
 
@@ -206,9 +218,14 @@ When tests are added, follow these guidelines:
 | getDealRoom(dealRoomId) | DealRoom or null |
 | getUserPipeline(userId) | PipelineEntryWithProperty[] |
 | getDealRoomInvestors(dealRoomId) | Profile[] |
+| getDealRoomMembers(dealRoomId) | Profile[] |
 | getDealRoomActivity(dealRoomId) | DealRoomActivityEntry[] |
 | getInvestorPipelineSummary(investorId) | Record<string, number> |
 | getStageHistory(pipelineId) | PipelineStageHistory[] |
+| getOwnedProperties(investorId, filters) | OwnedPropertyWithCosts[] |
+| getOwnedPropertiesPage(investorId, filters) | paged owned properties + counts |
+| getOwnedAnalytics(investorId, filters) | OwnedAnalytics |
+| getOwnedChartPreferences(userId) | OwnedChartId[] |
 
 ---
 
@@ -223,4 +240,13 @@ When tests are added, follow these guidelines:
 | changeStage(pipelineId, newStage, notes?) | pipeline.ts | Update stage + log history |
 | updateNotes(pipelineId, notes) | pipeline.ts | Save investor notes |
 | removeFromPipeline(pipelineId) | pipeline.ts | Delete pipeline entry |
+| changeStageAndConvertToOwned(pipelineId, newStage, conversion) | pipeline.ts | Move pipeline record to `closed` and create owned portfolio row |
 | updateGroupNotes(pipelineId, groupNotes) | admin.ts | Admin-only group notes |
+| createOwnedProperty(formData) | owned.ts | Create portfolio row |
+| updateOwnedProperty(formData) | owned.ts | Update portfolio row |
+| deleteOwnedProperty(formData) | owned.ts | Delete portfolio row |
+| importOwnedPropertiesCsv(prevState, formData) | owned.ts | CSV import with row-level validation |
+| upsertOwnedCostItem(formData) | owned.ts | Create/update owned cost item |
+| deleteOwnedCostItem(formData) | owned.ts | Delete owned cost item |
+| updateOwnedChartPreferences(pinnedChartIds) | owned.ts | Persist chart favorites |
+| backfillClosedPipelineToOwned(formData) | owned.ts | Convert historical closed pipeline rows into portfolio rows |

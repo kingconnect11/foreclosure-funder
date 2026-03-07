@@ -238,13 +238,48 @@ export async function removeFromPipeline(pipelineId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  const { data: viewerProfile, error: viewerError } = await supabase
+    .from('profiles')
+    .select('role, deal_room_id')
+    .eq('id', user.id)
+    .single()
+
+  if (viewerError || !viewerProfile) throw new Error('Unable to load viewer profile')
+
+  const { data: entry, error: entryError } = await supabase
+    .from('investor_pipeline')
+    .select('id, property_id, investor_id, deal_room_id')
+    .eq('id', pipelineId)
+    .single()
+
+  if (entryError || !entry) throw new Error('Pipeline entry not found')
+
+  let canDelete = false
+  if (viewerProfile.role === 'super_admin') {
+    canDelete = true
+  } else if (viewerProfile.role === 'admin') {
+    canDelete =
+      viewerProfile.deal_room_id !== null &&
+      entry.deal_room_id !== null &&
+      viewerProfile.deal_room_id === entry.deal_room_id
+  } else {
+    canDelete = entry.investor_id === user.id
+  }
+
+  if (!canDelete) {
+    throw new Error('Not authorized to remove this pipeline entry')
+  }
+
   const { error } = await supabase
     .from('investor_pipeline')
     .delete()
     .eq('id', pipelineId)
-    .eq('investor_id', user.id)
 
   if (error) throw error
   revalidatePath('/pipeline')
   revalidatePath('/dashboard')
+  revalidatePath('/admin')
+  if (entry.property_id) {
+    revalidatePath(`/property/${entry.property_id}`)
+  }
 }

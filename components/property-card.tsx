@@ -3,25 +3,41 @@
 import Link from 'next/link'
 import { Property } from '@/lib/types'
 import { formatCurrency, formatDate, saleDateUrgency, formatPropertyDetails } from '@/lib/utils'
-import { MapPin, Bed, Bath, Square, Calendar, ArrowRight } from 'lucide-react'
-import { saveToPipeline } from '@/actions/pipeline'
+import { MapPin, Bed, Bath, Square, Calendar, ArrowRight, Trash2 } from 'lucide-react'
+import { saveToPipeline, removeFromPipeline } from '@/actions/pipeline'
 import { useTransition, useState } from 'react'
 import clsx from 'clsx'
 
 interface PropertyCardProps {
   property: Property
   isSavedInitial: boolean
+  pipelineEntryId: string | null
 }
 
-export function PropertyCard({ property, isSavedInitial }: PropertyCardProps) {
+export function PropertyCard({ property, isSavedInitial, pipelineEntryId }: PropertyCardProps) {
   const [isPending, startTransition] = useTransition()
   const [isSaved, setIsSaved] = useState(isSavedInitial)
 
-  const handleSave = async (e: React.MouseEvent) => {
+  const handleAction = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (isSaved) return
-    
+
+    if (isSaved) {
+      if (!pipelineEntryId) return
+      const confirmed = window.confirm('Remove this property from pipeline?')
+      if (!confirmed) return
+
+      setIsSaved(false)
+      startTransition(async () => {
+        try {
+          await removeFromPipeline(pipelineEntryId)
+        } catch {
+          setIsSaved(true)
+        }
+      })
+      return
+    }
+
     setIsSaved(true)
     startTransition(async () => {
       try {
@@ -138,21 +154,19 @@ export function PropertyCard({ property, isSavedInitial }: PropertyCardProps) {
         {/* Action button */}
         <div className="p-5 pt-0">
           <button
-            onClick={handleSave}
-            disabled={isSaved || isPending}
+            onClick={handleAction}
+            disabled={isPending || (isSaved && !pipelineEntryId)}
             className={clsx(
               'w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-lg text-sm font-medium transition-all',
               isSaved
-                ? 'bg-success/10 text-success cursor-default'
+                ? 'bg-warning/10 text-warning-dark hover:bg-warning/15'
                 : 'bg-rice-100 text-ink-700 hover:bg-accent hover:text-white'
             )}
           >
             {isSaved ? (
               <>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                In Pipeline
+                <Trash2 className="w-4 h-4" />
+                Remove from Pipeline
               </>
             ) : (
               <>

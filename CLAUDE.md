@@ -27,9 +27,9 @@
 
 **Founders:** Philip King (CTO, super_admin), Mike King (sales, admin)
 
-**Current status (2026-03-06):** Phase 1 backend complete. Bake-off winner integrated and hardened (Phase 1c). Deal Analyzer tool shipped. Deployed to Vercel and functional. Frontend design is current working state -- bake-off entries still under review. Moving toward alpha release (target: 4 weeks).
+**Current status (2026-03-07):** Alpha app includes Portfolio module (canonical `/portfolio` with `/owned` alias), owned analytics, pipeline-to-portfolio conversion, and admin member-switchable portfolio views. Marketing pages are live. Latest portfolio/chart restructuring is pushed and deployed to preview.
 
-**Current phase:** Phase 1 Alpha Launch (see FOUNDING_ARCHITECTURE.md Section 19). Next up: onboarding form, loading skeletons, landing page, pricing tier walkthrough.
+**Current phase:** Phase 1 Alpha Launch (see FOUNDING_ARCHITECTURE.md Section 19). Immediate focus: property intelligence PDF demo, plan-tier gating UX + backend enforcement, mobile/iOS strategy, and richer controls/chips/toggles across app surfaces.
 
 **Pricing tiers (simplified for now):** Free ($0), Standard ($20/mo), Premium ($40/mo), Deal Room ($500/mo). See FOUNDING_ARCHITECTURE.md Section 5-6 for full feature breakdown.
 
@@ -84,29 +84,34 @@ app/
     layout.tsx            # Authenticated layout with Nav sidebar
     dashboard/page.tsx    # Property listings, stats, filters, pagination
     pipeline/page.tsx     # Kanban-style CRM pipeline
+    portfolio/page.tsx    # Portfolio analytics + property management (canonical)
+    owned/page.tsx        # Alias redirect to /portfolio
     property/[id]/page.tsx # Property detail with stage progress, notes, maps
     admin/page.tsx        # Admin panel (investor table + activity feed)
     deal-analyzer/page.tsx # Flip/rental/wholesale calculator
 
-components/               # 19 components (see AGENTS.md for full list)
+components/               # App-wide shared components + feature folders
 lib/
-  queries.ts              # 15 server-side data fetching functions
+  queries.ts              # Server-side data fetching (dashboard/pipeline/portfolio/admin)
   types.ts                # Generated Supabase types + convenience aliases
   utils.ts                # Formatting utilities (currency, date, urgency, cn)
   supabase/server.ts      # createClient() + createServiceClient()
   supabase/client.ts      # Browser-side createClient()
   supabase/middleware.ts   # Auth session refresh + route protection
   deal-analyzer/calculations.ts  # Flip, rental, wholesale engines
+  owned/calculations.ts   # Portfolio KPIs + trend/category analytics
+  owned/types.ts          # Portfolio domain types
 
 actions/
   auth.ts                 # signIn, signUp, signOut
-  pipeline.ts             # saveToPipeline, changeStage, updateNotes, removeFromPipeline
+  pipeline.ts             # saveToPipeline + stage updates + convert-to-portfolio flow
+  owned.ts                # Portfolio CRUD, CSV import, cost lines, chart prefs, backfill
   admin.ts                # updateGroupNotes
 
 middleware.ts             # Root middleware (delegates to supabase/middleware.ts)
 scraper/                  # Python foreclosure scraper (DO NOT MODIFY)
 scripts/                  # Python seed scripts (DO NOT MODIFY)
-supabase/migrations/      # 9 versioned SQL migrations
+supabase/migrations/      # versioned SQL migrations (includes security + portfolio schema)
 ```
 
 ### Data Flow
@@ -131,8 +136,11 @@ supabase/migrations/      # 9 versioned SQL migrations
 |-------|---------|
 | profiles | User accounts (id = auth.uid), role, deal_room_id, subscription |
 | properties | Foreclosure listings (81 seeded) -- address, stage, sale_date, appraisal |
-| investor_pipeline | User's saved properties with CRM stage, notes, offer_amount |
+| investor_pipeline | User's saved properties with CRM stage, notes, offer_amount, moved_to_owned_at |
 | pipeline_stage_history | Stage transition log with notes and timestamps |
+| owned_properties | Portfolio properties owned/closed by investor |
+| owned_property_cost_items | Cost line-items per owned property (construction/legal/interest/etc) |
+| owned_chart_preferences | Per-user favorite/pinned portfolio charts |
 | deal_rooms | Agent organizations with branding and contact info |
 | markets | Geographic markets (1: Sedgwick County, KS) |
 | court_research | Title/lien research (empty -- Phase 2) |
@@ -146,7 +154,7 @@ supabase/migrations/      # 9 versioned SQL migrations
 - **pipeline_stage:** watching, researching, site_visit, preparing_offer, offer_submitted, counter_offered, offer_accepted, in_closing, closed, rejected, no_response, passed
 - **user_role:** super_admin, admin, investor
 
-### RLS: 35 policies across 9 tables. Key patterns:
+### RLS: policies enforced across pipeline, portfolio, and profile domains. Key patterns:
 - Investors see only their own pipeline entries
 - Admins see all entries in their deal room
 - Properties readable by all authenticated users
@@ -178,7 +186,7 @@ npm run dev          # Dev server
 npm run build        # Production build (must pass zero TS errors)
 npm run start        # Production server
 npm run lint         # ESLint
-npm run test         # Vitest unit tests (54 tests)
+npm run test         # Vitest unit tests (57 tests)
 npm run test:watch   # Vitest in watch mode
 ```
 
@@ -212,17 +220,21 @@ See `AGENTS.md` for the full shared conventions. Key points:
 ## Known Issues
 
 See `TODO.md` for the complete prioritized list with agent assignments. Critical items:
-1. No landing page or pricing page (P0 -- Kimi)
-2. Test suite foundation done (54 unit tests); integration + E2E tests still needed (P0 -- Claude Code)
-3. court_research and recommendation_scores tables are empty (Phase 2-3)
-4. No email verification on signup (P1 -- Claude Code)
+1. Property Intelligence PDF report demo is not yet implemented (new top priority)
+2. Plan-tier capability enforcement + lock-state UI is incomplete
+3. Test suite foundation done (57 unit tests); integration + E2E tests still needed
+4. No email verification on signup (Supabase auth config)
+5. iOS path decision (native vs web-first) is still open
 
 ---
 
 ## Recent Changes (update after every task)
 
-- 2026-03-07: Built Owned Properties capability end-to-end -- added migration `20260307020000_owned_properties.sql` (owned tables, enums, RLS, pipeline `moved_to_owned_at`), server actions in `actions/owned.ts` (manual CRUD, CSV import with row validation, cost line-item CRUD, chart preference persistence, closed-pipeline backfill), owned analytics engine in `lib/owned/calculations.ts`, new `/owned` route + loading state + nav entry + chart pinning + filtering/pagination, dashboard owned KPI strip + link, and closed-stage conversion flow (`changeStageAndConvertToOwned`) that prompts for owned fields and moves closed deals out of active pipeline. Added tests in `__tests__/lib/owned-calculations.test.ts` (57 total passing).
-- 2026-03-07: Test suite foundation -- vitest configured with 54 passing unit tests (24 for lib/utils, 30 for lib/deal-analyzer/calculations); `npm run test` and `npm run test:watch` scripts added
+- 2026-03-07: Portfolio UX overhaul completed in `b9c4eec` -- introduced canonical `/portfolio` route + loading state, converted `/owned` to alias redirect with query preservation, added `components/owned/portfolio-charts.tsx` with featured/favorite star chart behavior, enlarged and color-enhanced chart visuals, moved CSV/manual entry sections to bottom of portfolio page, updated nav/dashboard links to `/portfolio`, and added `assets/portfolio-import-demo-10.csv` for import demos.
+- 2026-03-07: Portfolio visibility and filtering fixes completed in `fb24a7d` -- admin/super_admin can switch across all deal room members (not only investor role), portfolio analytics are now filter-reactive (`status` + `search`), and related app/marketing copy was updated from Owned to Portfolio.
+- 2026-03-07: Built Owned Properties capability end-to-end in `abb7e28` -- added migration `20260307020000_owned_properties.sql` (owned tables, enums, RLS, pipeline `moved_to_owned_at`), server actions in `actions/owned.ts` (manual CRUD, CSV import with row validation, cost line-item CRUD, chart preference persistence, closed-pipeline backfill), owned analytics engine in `lib/owned/calculations.ts`, original `/owned` route + loading state, dashboard KPI strip + link, and closed-stage conversion flow (`changeStageAndConvertToOwned`) that prompts for owned fields and moves closed deals out of active pipeline. Added tests in `__tests__/lib/owned-calculations.test.ts`.
+- 2026-03-07: Operational data prep completed for demos -- seeded portfolio demo data for all profiles (3-15 properties each with varied values/types) and seeded cost-item depth for meaningful chart output.
+- 2026-03-07: Test suite foundation -- vitest configured with 57 passing unit tests (24 for lib/utils, 30 for lib/deal-analyzer/calculations, 3 for lib/owned/calculations); `npm run test` and `npm run test:watch` scripts added
 - 2026-03-07: Connected Deal Analyzer to property data -- accepts `?propertyId=` URL param; property detail page now has "Analyze This Deal" button; foreclosure amount maps to purchase price, county appraisal maps to ARV
 - 2026-03-07: Quick wins -- fixed updateNotes missing revalidatePath, replaced hardcoded color in deal-analyzer error.tsx with text-foreground token, added personalized "Welcome back, {FirstName}" dashboard heading
 - 2026-03-07: Committed all Codex work in 8 scoped batches -- auth hardening, onboarding form, loading skeletons, frontend polish, ESLint flat config, security migration, documentation, onboarding query

@@ -54,6 +54,7 @@ export default async function DashboardPage({
   ])
 
   const savedPropertyIds = new Set(pipeline.map(p => p.property_id))
+  const pipelineEntryByPropertyId = new Map(pipeline.map((entry) => [entry.property_id, entry.id]))
 
   const totalPages = Math.ceil(total / 30)
   const currentPage = params.page ? parseInt(params.page) : 1
@@ -140,6 +141,7 @@ export default async function DashboardPage({
             key={property.id} 
             property={property} 
             isSavedInitial={savedPropertyIds.has(property.id)} 
+            pipelineEntryId={pipelineEntryByPropertyId.get(property.id) ?? null}
           />
         ))}
       </div>

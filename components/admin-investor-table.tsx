@@ -5,6 +5,7 @@ import { Profile } from '@/lib/types'
 
 type InvestorWithSummary = Profile & {
   summary: Record<string, number>
+  portfolioCount: number
 }
 
 const ACTIVE_STAGES = ['researching', 'site_visit', 'preparing_offer', 'offer_submitted', 'counter_offered', 'offer_accepted', 'in_closing']
@@ -27,7 +28,8 @@ export function AdminInvestorTable({ investors }: { investors: InvestorWithSumma
         </thead>
         <tbody className="text-sm">
           {investors.map((investor) => {
-            const totalSaved = Object.values(investor.summary).reduce((a, b) => a + b, 0)
+            const pipelineCount = Object.values(investor.summary).reduce((a, b) => a + b, 0)
+            const totalSaved = pipelineCount + (investor.portfolioCount ?? 0)
             const activeDeals = Object.entries(investor.summary)
               .filter(([stage]) => ACTIVE_STAGES.includes(stage))
               .reduce((a, [, count]) => a + count, 0)
@@ -66,9 +68,19 @@ export function AdminInvestorTable({ investors }: { investors: InvestorWithSumma
                                 <span className="font-data text-text-primary">{count}</span>
                               </div>
                             ))}
+                            <div className="flex items-center gap-2 bg-sky-50 border border-sky-200 px-3 py-1.5 rounded text-sm">
+                              <span className="text-sky-800">portfolio properties:</span>
+                              <span className="font-data text-sky-900">{investor.portfolioCount ?? 0}</span>
+                            </div>
                           </div>
                         ) : (
-                          <span className="text-sm text-text-secondary">Pipeline is empty.</span>
+                          <div className="flex flex-wrap gap-4">
+                            <span className="text-sm text-text-secondary">Pipeline is empty.</span>
+                            <div className="flex items-center gap-2 bg-sky-50 border border-sky-200 px-3 py-1.5 rounded text-sm">
+                              <span className="text-sky-800">portfolio properties:</span>
+                              <span className="font-data text-sky-900">{investor.portfolioCount ?? 0}</span>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </td>

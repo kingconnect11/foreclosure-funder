@@ -9,7 +9,7 @@ import clsx from 'clsx'
 const ALL_STAGES = [
   'watching', 'researching', 'site_visit', 'preparing_offer',
   'offer_submitted', 'counter_offered', 'offer_accepted',
-  'in_closing', 'closed', 'rejected', 'no_response', 'passed'
+  'in_closing', 'closed', 'rejected', 'no_response', 'passed', 'portfolio_added'
 ]
 
 const formatStageLabel = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
@@ -18,6 +18,7 @@ const STAGE_ICONS: Record<string, React.ReactNode> = {
   watching: <Activity className="w-4 h-4" />,
   offer_submitted: <DollarSign className="w-4 h-4" />,
   offer_accepted: <FileCheck className="w-4 h-4" />,
+  portfolio_added: <FileCheck className="w-4 h-4" />,
 }
 
 const STAGE_COLORS: Record<string, string> = {
@@ -33,6 +34,7 @@ const STAGE_COLORS: Record<string, string> = {
   rejected: 'text-danger bg-danger/10',
   no_response: 'text-ink-400 bg-ink-100',
   passed: 'text-ink-400 bg-ink-100',
+  portfolio_added: 'text-sky-700 bg-sky-100',
 }
 
 interface ActivityFeedProps {
@@ -90,6 +92,7 @@ export function ActivityFeed({ activity }: ActivityFeedProps) {
             const address = entry.properties?.address || 'a property'
             const stageColor = STAGE_COLORS[entry.stage || ''] || 'text-ink-500 bg-ink-100'
             const stageLabel = entry.stage?.replace(/_/g, ' ') || 'updated'
+            const isPortfolio = entry.activity_type === 'portfolio'
 
             return (
               <div
@@ -109,18 +112,22 @@ export function ActivityFeed({ activity }: ActivityFeedProps) {
                   <p className="text-sm text-foreground">
                     <span className="font-semibold">{investor}</span>
                     {' '}
-                    {entry.stage === 'watching' ? 'saved' : 'moved'}
+                    {isPortfolio ? 'added' : entry.stage === 'watching' ? 'saved' : 'moved'}
                     {' '}
                     <span className="font-medium">{address}</span>
                     {' '}
-                    {entry.stage !== 'watching' && (
+                    {isPortfolio ? (
+                      <>
+                        to <span className={clsx('font-semibold', stageColor.split(' ')[0])}>portfolio</span>
+                      </>
+                    ) : entry.stage !== 'watching' && (
                       <>
                         to <span className={clsx('font-semibold', stageColor.split(' ')[0])}>{stageLabel}</span>
                       </>
                     )}
                   </p>
 
-                  {entry.offer_amount && (
+                  {entry.offer_amount && !isPortfolio && (
                     <p className="text-sm text-ink-500 mt-1">
                       Offer: <span className="font-mono font-semibold text-accent">${entry.offer_amount.toLocaleString()}</span>
                     </p>

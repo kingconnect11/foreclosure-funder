@@ -3,6 +3,7 @@ import type {
   Property,
   Profile,
   InvestorPipeline,
+  InvestorPreferences,
   CourtResearch,
   DealRoom,
   PropertyStage,
@@ -341,6 +342,24 @@ export async function getStageHistory(pipelineId: string): Promise<PipelineStage
     .order('entered_at', { ascending: true })
   if (error) throw error
   return data ?? []
+}
+
+// ---------------------------------------------------------------------------
+// Onboarding
+// ---------------------------------------------------------------------------
+
+export async function getInvestorPreferences(
+  investorId: string
+): Promise<InvestorPreferences | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('investor_preferences')
+    .select('*')
+    .eq('investor_id', investorId)
+    .maybeSingle()
+
+  if (error) throw error
+  return data
 }
 
 // ---------------------------------------------------------------------------
